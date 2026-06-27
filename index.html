@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nandi AgriHub | Login</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --green:#1f8f4e;
+  --dark:#16693a;
+  --bg:#f4f7f5;
+  --text:#1f2937;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* HEADER */
+header{
+  padding:18px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  color:var(--green);
+  background:#fff;
+  box-shadow:0 2px 10px #0001;
+}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,var(--green),var(--dark));
+  color:#fff;
+  padding:30px 20px;
+  text-align:center;
+}
+
+.hero h1{
+  font-size:1.8rem;
+  margin-bottom:10px;
+}
+
+.hero p{
+  font-size:0.95rem;
+  opacity:0.9;
+}
+
+/* LOGIN BOX */
+.container{
+  width:92%;
+  max-width:420px;
+  margin:-25px auto 20px;
+  background:#fff;
+  padding:22px;
+  border-radius:16px;
+  box-shadow:0 10px 25px #0002;
+}
+
+h2{
+  margin-bottom:6px;
+}
+
+small{
+  color:#666;
+}
+
+/* INPUTS */
+label{
+  display:block;
+  margin:14px 0 6px;
+  font-weight:bold;
+  font-size:14px;
+}
+
+input{
+  width:100%;
+  padding:13px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--green);
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:var(--green);
+  color:#fff;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* FEATURES */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+  padding:20px;
+  max-width:900px;
+  margin:auto;
+}
+
+.card{
+  background:#fff;
+  padding:18px;
+  border-radius:14px;
+  text-align:center;
+  box-shadow:0 4px 10px #0001;
+  font-size:14px;
+}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  padding:25px;
+  font-size:13px;
+  color:#666;
+}
+
+/* DESKTOP */
+@media(min-width:900px){
+  .hero{
+    border-radius:18px;
+    margin:20px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>🌾 Nandi AgriHub</header>
+
+<section class="hero">
+  <h1>Connecting Farmers & Buyers</h1>
+  <p>Buy • Sell • AI Advisor • Loans • Land Listings</p>
+</section>
+
+<div class="container">
+  <h2>Welcome Back</h2>
+  <small>Login with your ID number</small>
+
+  <form id="loginForm">
+    <label>ID Number</label>
+    <input id="idNumber" type="text" placeholder="Enter ID Number">
+
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Enter Password">
+
+    <button type="submit" id="loginBtn">Login</button>
+  </form>
+
+  <p style="text-align:center;margin-top:14px">
+    <a href="register.html">Create Account</a>
+  </p>
+
+  <p id="alertBox" style="text-align:center;margin-top:10px;font-weight:bold;"></p>
+</div>
+
+<section class="grid">
+  <div class="card">🛒 Marketplace</div>
+  <div class="card">🌱 Farm Inputs</div>
+  <div class="card">🤖 AI Advisor</div>
+  <div class="card">💰 Loans</div>
+  <div class="card">🌍 Land</div>
+  <div class="card">🚚 Buyers</div>
+</section>
+
+<footer>© Nandi AgriHub</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
+
+  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form = document.getElementById("loginForm");
+  const alertBox = document.getElementById("alertBox");
+  const btn = document.getElementById("loginBtn");
+
+  function show(msg, ok=false){
+    alertBox.style.color = ok ? "green" : "red";
+    alertBox.textContent = msg;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const idNumber = document.getElementById("idNumber").value.trim();
+    const password = document.getElementById("password").value;
+
+    if(!idNumber || !password){
+      show("Fill all fields");
+      return;
+    }
+
+    btn.textContent = "Logging in...";
+    btn.disabled = true;
+
+    const { data, error } = await client
+      .from("users")
+      .select("*")
+      .eq("id_number", idNumber)
+      .single();
+
+    if(error || !data){
+      show("Account not found");
+      btn.textContent = "Login";
+      btn.disabled = false;
+      return;
+    }
+
+    if(data.password !== password){
+      show("Wrong password");
+      btn.textContent = "Login";
+      btn.disabled = false;
+      return;
+    }
+
+    localStorage.setItem("agrihub_user", JSON.stringify(data));
+
+    show("Login successful ✔", true);
+
+    setTimeout(()=>{
+      window.location.href = "farmerdashboard.html";
+    }, 1000);
+  });
+
+});
+</script>
+
+</body>
+</html>

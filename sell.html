@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nandi AgriHub | Sell Product</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      background:linear-gradient(135deg,#0f172a,#1f8f4e);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:20px;
+    }
+
+    .card{
+      width:100%;
+      max-width:560px;
+      background:#fff;
+      border-radius:22px;
+      padding:28px;
+      box-shadow:0 20px 50px rgba(0,0,0,0.28);
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:8px;
+      color:#111827;
+    }
+
+    .subtitle{
+      text-align:center;
+      color:#6b7280;
+      margin-bottom:22px;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .user-box{
+      background:#f0fdf4;
+      border:1px solid #bbf7d0;
+      color:#166534;
+      padding:12px 14px;
+      border-radius:12px;
+      margin-bottom:18px;
+      font-size:14px;
+      font-weight:700;
+      text-align:center;
+    }
+
+    .form-group{
+      margin-bottom:14px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+      font-weight:700;
+      color:#374151;
+    }
+
+    input, textarea{
+      width:100%;
+      padding:13px 14px;
+      border:1px solid #d1d5db;
+      border-radius:12px;
+      outline:none;
+      font-size:15px;
+      background:#fff;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    input:focus,
+    textarea:focus{
+      border-color:#1f8f4e;
+      box-shadow:0 0 0 3px rgba(31,143,78,0.12);
+    }
+
+    .file-note{
+      font-size:12px;
+      color:#6b7280;
+      margin-top:6px;
+      line-height:1.5;
+    }
+
+    .optional-badge{
+      display:inline-block;
+      margin-left:8px;
+      font-size:11px;
+      font-weight:700;
+      color:#475467;
+      background:#eef2f6;
+      border:1px solid #dde3ea;
+      padding:2px 8px;
+      border-radius:999px;
+      vertical-align:middle;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      background:#1f8f4e;
+      color:white;
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    button:hover{
+      background:#16693a;
+    }
+
+    button:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
+
+    .msg{
+      display:none;
+      margin-top:14px;
+      padding:12px;
+      border-radius:12px;
+      text-align:center;
+      font-size:14px;
+      font-weight:700;
+      line-height:1.5;
+    }
+
+    .success{
+      background:#dcfce7;
+      color:#166534;
+      border:1px solid #bbf7d0;
+    }
+
+    .error{
+      background:#fee2e2;
+      color:#991b1b;
+      border:1px solid #fecaca;
+    }
+
+    .back-link{
+      display:block;
+      text-align:center;
+      margin-top:16px;
+      color:#1f8f4e;
+      text-decoration:none;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .back-link:hover{
+      text-decoration:underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>🌾 Sell Your Product</h2>
+    <p class="subtitle">
+      Post your farm produce or service to the Nandi AgriHub marketplace
+    </p>
+
+    <div class="user-box" id="sellerBox">Logged in as: Loading...</div>
+
+    <div class="form-group">
+      <label for="name">Product Name</label>
+      <input id="name" type="text" placeholder="e.g. Maize, Beans, Potatoes" />
+    </div>
+
+    <div class="form-group">
+      <label for="price">Price (KES)</label>
+      <input id="price" type="number" placeholder="e.g. 2500" />
+    </div>
+
+    <div class="form-group">
+      <label for="quantity">Quantity</label>
+      <input id="quantity" type="text" placeholder="e.g. 5 bags, 200 kg, 20 trays" />
+    </div>
+
+    <div class="form-group">
+      <label for="location">Location</label>
+      <input id="location" type="text" placeholder="e.g. Kapsabet, Nandi Hills" />
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description <span class="optional-badge">Optional</span></label>
+      <textarea id="description" placeholder="Add more details about the product, quality, packaging, delivery, harvest date, etc."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="whatsapp">WhatsApp Number <span class="optional-badge">Optional</span></label>
+      <input id="whatsapp" type="text" placeholder="e.g. 254712345678" />
+      <div class="file-note">
+        Leave blank if the farmer does not have a WhatsApp number.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="imageFile">Product Image <span class="optional-badge">Optional</span></label>
+      <input id="imageFile" type="file" accept="image/*" />
+      <div class="file-note">Optional but recommended for better visibility.</div>
+    </div>
+
+    <button id="postBtn" onclick="addProduct()">Post Product</button>
+
+    <div id="msg" class="msg"></div>
+
+    <a class="back-link" href="farmerdashboard.html">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const currentUser = JSON.parse(localStorage.getItem("agrihub_user"));
+
+    if (!currentUser) {
+      window.location.href = "index.html";
+    }
+
+    const sellerName = currentUser?.full_name || currentUser?.name || "Farmer";
+    const sellerBox = document.getElementById("sellerBox");
+    const postBtn = document.getElementById("postBtn");
+
+    sellerBox.textContent = "Logged in as: " + sellerName;
+
+    function showMsg(text, type){
+      const msg = document.getElementById("msg");
+      msg.style.display = "block";
+      msg.className = "msg " + type;
+      msg.textContent = text;
+    }
+
+    function clearMsg(){
+      const msg = document.getElementById("msg");
+      msg.style.display = "none";
+      msg.className = "msg";
+      msg.textContent = "";
+    }
+
+    function cleanWhatsAppNumber(raw){
+      if(!raw) return "";
+      let value = raw.trim();
+
+      // Remove spaces, dashes, brackets
+      value = value.replace(/[^\d+]/g, "");
+
+      // Convert +2547... -> 2547...
+      if(value.startsWith("+")){
+        value = value.substring(1);
+      }
+
+      // Convert 07xxxxxxxx -> 2547xxxxxxxx
+      if(/^0\d+$/.test(value)){
+        value = "254" + value.substring(1);
+      }
+
+      return value;
+    }
+
+    async function addProduct(){
+      clearMsg();
+
+      const name = document.getElementById("name").value.trim();
+      const price = document.getElementById("price").value.trim();
+      const quantity = document.getElementById("quantity").value.trim();
+      const location = document.getElementById("location").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const whatsappRaw = document.getElementById("whatsapp").value.trim();
+      const imageFile = document.getElementById("imageFile").files[0];
+
+      if (!name || !price || !quantity || !location) {
+        showMsg("Please fill all required fields.", "error");
+        return;
+      }
+
+      const whatsapp_number = cleanWhatsAppNumber(whatsappRaw);
+
+      postBtn.disabled = true;
+      postBtn.textContent = "Posting...";
+
+      try {
+        let imageUrl = "";
+
+        // Upload image if selected
+        if (imageFile) {
+          const cleanName = imageFile.name.replace(/\s+/g, "_");
+          const fileName = `product_${Date.now()}_${cleanName}`;
+
+          const { error: uploadError } = await sb
+            .storage
+            .from("product-images")
+            .upload(fileName, imageFile);
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { data: publicData } = sb
+            .storage
+            .from("product-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = publicData?.publicUrl || "";
+        }
+
+        /*
+          IMPORTANT FIX:
+          We are NOT inserting user_id because your products.user_id column
+          is currently bigint in Supabase, while currentUser.id is UUID.
+          That mismatch is what caused:
+          invalid input syntax for type bigint: "821c73df-..."
+        */
+        const productPayload = {
+          name,
+          price: Number(price),
+          quantity,
+          location,
+          description: description || null,
+          image_url: imageUrl || null,
+          seller_name: sellerName,
+          sold: false,
+          whatsapp_number: whatsapp_number || null
+        };
+
+        const { error } = await sb
+          .from("products")
+          .insert([productPayload]);
+
+        if (error) {
+          throw error;
+        }
+
+        showMsg("Product posted successfully ✅", "success");
+
+        document.getElementById("name").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("quantity").value = "";
+        document.getElementById("location").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("whatsapp").value = "";
+        document.getElementById("imageFile").value = "";
+
+        setTimeout(() => {
+          window.location.href = "farmerdashboard.html";
+        }, 1200);
+
+      } catch (err) {
+        console.error("Product post error:", err);
+        showMsg(err.message || "Something went wrong while posting.", "error");
+      } finally {
+        postBtn.disabled = false;
+        postBtn.textContent = "Post Product";
+      }
+    }
+  </script>
+
+</body>
+</html>
