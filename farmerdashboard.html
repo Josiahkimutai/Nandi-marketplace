@@ -353,7 +353,23 @@ body{
     background:#e5e7eb;
     color:#374151;
 }
+.whatsapp-btn{
+  background:#25D366;   /* WhatsApp green */
+  color:white;
+}
 
+.whatsapp-btn:hover{
+  background:#1ebe5d;
+}
+
+.message-btn-post{
+  background:#6b7280;   /* grey */
+  color:white;
+}
+
+.message-btn-post:hover{
+  background:#4b5563;
+}
 .verify-btn i{
   font-size:16px;
 }
@@ -473,8 +489,7 @@ if (!user) window.location.href = "index.html";
 /* =========================
    STATE
 ========================= */
-let verifiedUsers = new Set();
-let userVerificationStatus = "notverified";
+
 let allProducts = [];
 
 /* =========================
@@ -494,56 +509,57 @@ async function loadUser() {
     `https://i.pravatar.cc/100?u=${user.id}`;
 }
 
-/* =========================
-   VERIFICATION (CLEAN LOGIC)
-========================= */
-async function loadVerification() {
+let isVerified = false;
 
+async function loadVerification() {
   const { data, error } = await sb
     .from("verifications")
     .select("user_id, status");
 
   if (error) {
-    console.error("Verification error:", error);
+    console.error(error);
     return;
   }
 
-  // Build verified set
-  verifiedUsers = new Set(
-    (data || [])
-      .filter(v => v.status === "verified")
-      .map(v => v.user_id)
-  );
-
-  // get current user status
   const my = data?.find(v => v.user_id === user.id);
 
-  userVerificationStatus = my?.status || "notverified";
+  const status = (my?.status || "notverified").toLowerCase();
 
-  updateVerificationUI();
+  // 🔥 SINGLE SOURCE OF TRUTH
+  isVerified = ["verified", "approved"].includes(status.toLowerCase());
+
+  console.log("VERIFICATION STATUS:", status, "isVerified:", isVerified);
+
+  updateVerificationUI(status);
+
+  // refresh feed AFTER status is known
+  renderFeed(allProducts);
+
 }
 
 /* =========================
    UPDATE UI STATUS CARD
 ========================= */
-function updateVerificationUI() {
+function updateVerificationUI(status) {
   const badge = document.getElementById("verifyStatus");
-
   if (!badge) return;
 
+  // reset classes first
   badge.classList.remove("verified", "pending", "rejected", "notverified");
 
-  if (userVerificationStatus === "verified") {
+  const normalized = (status || "notverified").toLowerCase();
+
+  if (normalized === "verified" || normalized === "approved") {
     badge.innerText = "Verified";
     badge.classList.add("verified");
   }
 
-  else if (userVerificationStatus === "pending") {
+  else if (normalized === "pending") {
     badge.innerText = "Pending Review";
     badge.classList.add("pending");
   }
 
-  else if (userVerificationStatus === "rejected") {
+  else if (normalized === "rejected") {
     badge.innerText = "Rejected";
     badge.classList.add("rejected");
   }
@@ -585,15 +601,23 @@ function formatTimeAgo(date) {
 }
 
 /* =========================
-   RENDER FEED (LOCK LOGIC FIXED)
+ /* =========================
+   RENDER FEED (FIXED)
 ========================= */
 function renderFeed(data) {
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
-  const isVerified = userVerificationStatus === "verified";
+  const allowed = isVerified === true;
 
   data.forEach(p => {
+
+    const sellerId = p.user_id || null;
+    const sellerName = p.seller_name || "Seller";
+
+    const whatsappNumber = (p.whatsapp_number || "").trim();
+    const hasWhatsApp = whatsappNumber.length > 0;
+
     const div = document.createElement("div");
 
     div.innerHTML = `
@@ -601,8 +625,8 @@ function renderFeed(data) {
 
         <div class="post-header">
           <div class="post-left">
-            <img src="https://i.pravatar.cc/100?u=${p.seller_name}">
-            <b>${p.seller_name}</b>
+            <img src="https://i.pravatar.cc/100?u=${sellerName}">
+            <b>${sellerName}</b>
           </div>
         </div>
 
@@ -619,15 +643,22 @@ function renderFeed(data) {
 
         <div class="actions">
 
-          <button class="small-btn ${!isVerified ? 'locked' : ''}">
+          <!-- WHATSAPP -->
+          <button class="small-btn whatsapp-btn"
+            style="background:${hasWhatsApp && allowed ? '#25D366' : '#ccc'}; color:white"
+            data-wa="${whatsappNumber}">
             WhatsApp
           </button>
 
-          <button class="small-btn ${!isVerified ? 'locked' : ''}"
-            onclick="${isVerified ? `openChat('${p.user_id}','${p.seller_name}')` : ''}">
+          <!-- MESSAGE -->
+          <button class="small-btn message-btn-post"
+            style="background:${allowed ? '#6b7280' : '#ccc'}; color:white"
+            data-id="${sellerId || ''}"
+            data-name="${sellerName}">
             Message
           </button>
 
+          <!-- LIKE -->
           <button class="small-btn" onclick="toggleLike('${p.id}')">
             ❤️ <span id="like-${p.id}">${p.likes || 0}</span>
           </button>
@@ -638,56 +669,45 @@ function renderFeed(data) {
     `;
 
     feed.appendChild(div);
+
+    // ======================
+    // WHATSAPP CLICK
+    // ======================
+    const waBtn = div.querySelector(".whatsapp-btn");
+
+    waBtn.addEventListener("click", () => {
+      if (!allowed || !hasWhatsApp) {
+        alert("WhatsApp not available or you are not verified");
+        return;
+      }
+
+      window.open(`https://wa.me/${whatsappNumber}`, "_blank");
+    });
+
+    // ======================
+    // MESSAGE CLICK (FIXED)
+    // ======================
+    const msgBtn = div.querySelector(".message-btn-post");
+
+    msgBtn.addEventListener("click", () => {
+
+      if (!allowed) {
+        alert("You must be verified to message sellers.");
+        return;
+      }
+
+      if (!sellerId) {
+        alert("This seller cannot be contacted (missing user ID).");
+        console.log("Product missing user_id:", p);
+        return;
+      }
+
+      openChat(sellerId, sellerName);
+    });
+
   });
+
 }
-
-/* =========================
-   LIKE
-========================= */
-async function toggleLike(id) {
-  const post = allProducts.find(p => p.id === id);
-  if (!post) return;
-
-  post.likes = (post.likes || 0) + 1;
-
-  document.getElementById(`like-${id}`).innerText = post.likes;
-
-  await sb
-    .from("products")
-    .update({ likes: post.likes })
-    .eq("id", id);
-}
-
-/* =========================
-   CHAT
-========================= */
-async function openChat(sellerId, sellerName) {
-
-  if (userVerificationStatus !== "verified") {
-    alert("You must be verified to message sellers.");
-    return;
-  }
-
-  let { data } = await sb
-    .from("conversations")
-    .select("*")
-    .or(`and(user1.eq.${user.id},user2.eq.${sellerId}),and(user1.eq.${sellerId},user2.eq.${user.id})`)
-    .maybeSingle();
-
-  if (!data) {
-    const { data: newC } = await sb
-      .from("conversations")
-      .insert({ user1: user.id, user2: sellerId })
-      .select()
-      .single();
-
-    data = newC;
-  }
-
-  localStorage.setItem("chat_id", data.id);
-  window.location.href = "chat.html";
-}
-
 /* =========================
    FILTER
 ========================= */
