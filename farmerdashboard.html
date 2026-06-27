@@ -17,24 +17,49 @@ body{
   color:#1f2937;
 }
 
-/* TOP BAR */
+/* TOP BAR (SQUEEZED) */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:10px 14px;
+  padding:8px 10px;
   background:#fff;
   position:sticky;
   top:0;
   z-index:1000;
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  gap:10px;
 }
 
-.logo{display:flex;align-items:center;gap:10px;}
-.logo i{background:#1f8f4e;color:#fff;padding:10px;border-radius:12px;}
+.logo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 
-.btn{border:none;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer;}
-.gray-btn{background:#e5e7eb;}
+.logo i{
+  background:#1f8f4e;
+  color:#fff;
+  padding:8px;
+  border-radius:10px;
+}
+
+/* USER BOX */
+.user-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.user-box img{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #1f8f4e;
+}
 
 /* DASHBOARD BAR */
 .dashboard-bar{
@@ -42,10 +67,16 @@ body{
   margin:10px 14px;
   padding:14px;
   border-radius:16px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.06);
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+
+  position:sticky;
+  top:60px;      /* Position just below the topbar */
+  z-index:999;
+
   display:flex;
   flex-direction:column;
   gap:12px;
+
 }
 
 .row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -62,31 +93,39 @@ body{
 
 /* CATEGORY BAR */
 .filter-bar{
-  margin:10px 14px;
-  background:#fff;
-  border-radius:16px;
-  padding:10px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.06);
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:10px;
+    margin:10px 14px;
+    background:#fff;
+    border-radius:18px;
+    padding:15px;
+    box-shadow:0 3px 12px rgba(0,0,0,.08);
 }
 
 .category-scroll{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:15px;
 }
 
 .category-scroll button{
-  border:none;
-  padding:8px 12px;
-  border-radius:999px;
-  background:#f1f5f9;
-  font-weight:700;
-  cursor:pointer;
-  font-size:13px;
+    border:none;
+    background:#eef6f1;
+    color:#24553a;
+    padding:12px 8px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.category-scroll button:hover{
+    background:#dceee2;
+    transform:translateY(-2px);
+}
+
+.category-scroll button:active{
+    transform:scale(.97);
 }
 
 /* FEED */
@@ -104,7 +143,6 @@ body{
   border:1px solid #e5e7eb;
 }
 
-/* HEADER */
 .post-header{
   display:flex;
   justify-content:space-between;
@@ -117,14 +155,40 @@ body{
   gap:10px;
   align-items:center;
 }
+.message-btn{
+    position:relative;
+    background:#1f8f4e;
+    color:#fff;
+    border:none;
+    padding:8px 16px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+}
 
+.message-badge{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    min-width:20px;
+    height:20px;
+    border-radius:50%;
+    background:#e11d48;
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:2px solid white;
+
+}
 .post-header img{
   width:40px;
   height:40px;
   border-radius:50%;
 }
 
-/* IMAGE (Facebook style full width) */
 .img-box{
   width:100%;
   height:420px;
@@ -138,7 +202,6 @@ body{
   object-fit:cover;
 }
 
-/* SOLD overlay */
 .sold-overlay{
   position:absolute;
   top:0;left:0;
@@ -152,12 +215,10 @@ body{
   font-weight:900;
 }
 
-/* BODY */
 .post-body{padding:10px;}
 .price{color:#1f8f4e;font-weight:900;}
 .time{font-size:12px;color:#6b7280;margin-top:4px;}
 
-/* ACTIONS */
 .actions{
   display:flex;
   gap:8px;
@@ -174,35 +235,136 @@ body{
   cursor:pointer;
 }
 
-.whatsapp{background:#25D366;color:#fff;}
-.like-btn{background:#fff;border:1px solid #ddd;}
-
 .locked{opacity:0.5;pointer-events:none;}
 
-/* BOTTOM NAV (RESTORED) */
+/* BOTTOM NAV UPDATED */
 .bottom-nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  background:#fff;
-  display:flex;
-  justify-content:space-around;
-  padding:10px 0;
-  border-top:1px solid #e5e7eb;
-  box-shadow:0 -2px 10px rgba(0,0,0,0.05);
+    position:fixed;
+    bottom:0;
+    left:0;
+    width:100%;
+    background:#fff;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    padding:10px 0;
+    box-shadow:0 -5px 20px rgba(0,0,0,.12);
+    border-top:1px solid #ddd;
 }
 
 .bottom-nav button{
-  background:none;
+    border:none;
+    background:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    color:#1f8f4e;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.25s;
+}
+.verify-btn{
+  background:#2563eb;
+  color:#fff;
   border:none;
+  padding:10px 18px;
+  border-radius:12px;
+  font-size:14px;
   font-weight:700;
-  font-size:12px;
-  color:#374151;
+  cursor:pointer;
   display:flex;
-  flex-direction:column;
   align-items:center;
-  gap:4px;
+  gap:8px;
+  transition:0.3s;
+}
+
+.verify-btn:hover{
+  background:#1d4ed8;
+  transform:translateY(-2px);
+}
+.verify-card{
+    background:#f8fbf9;
+    border:1px solid #d9e9df;
+    border-radius:15px;
+    padding:15px;
+    margin-top:15px;
+}
+
+.verify-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.verify-header h3{
+    margin:0;
+    font-size:17px;
+    color:#1f8f4e;
+}
+
+.verify-text{
+    color:#555;
+    font-size:14px;
+    line-height:1.5;
+    margin-bottom:15px;
+}
+
+.verify-btn{
+    width:100%;
+    border:none;
+    background:#2563eb;
+    color:white;
+    padding:12px;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.verify-btn:hover{
+    background:#1d4ed8;
+}
+
+.status{
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.status.verified{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.status.pending{
+    background:#fef3c7;
+    color:#b45309;
+}
+
+.status.rejected{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.status.notverified{
+    background:#e5e7eb;
+    color:#374151;
+}
+
+.verify-btn i{
+  font-size:16px;
+}
+.bottom-nav button i{
+    font-size:22px;
+    margin-bottom:4px;
+}
+
+.bottom-nav button:hover{
+    transform:translateY(-2px);
+    color:#15803d;
 }
 </style>
 </head>
@@ -213,13 +375,12 @@ body{
 <div class="topbar">
   <div class="logo">
     <i class="fa-solid fa-leaf"></i>
-    <b>AgriHub</b>
+    <b>AgriHub Nandi</b>
   </div>
 
-  <div style="display:flex;gap:8px;">
-    <button class="btn" style="background:#22c55e;color:#fff;" onclick="location.href='messages.html'">Messages</button>
-    <button class="btn gray-btn" onclick="location.href='mylistings.html'">My Listings</button>
-    <button class="btn gray-btn" onclick="logout()">Logout</button>
+  <div class="user-box">
+    <img id="userAvatar" src="https://i.pravatar.cc/100" />
+    <span id="welcomeText">Welcome</span>
   </div>
 </div>
 
@@ -227,112 +388,212 @@ body{
 <div class="dashboard-bar">
   <div class="row">
     <div><b>📊 Active Listings:</b> <span id="activeCount">0</span></div>
-    <button class="sell-btn" onclick="location.href='sell.html'">➕ Sell Now</button>
+   <button class="message-btn" onclick="location.href='inbox.html'">
+    <i class="fa fa-comment"></i>
+    Messages
+    <span id="messageBadge" class="message-badge" style="display:none;">0</span>
+</button>
   </div>
 </div>
 
 <!-- CATEGORY BAR -->
 <div class="filter-bar">
+
   <div class="category-scroll">
-    <button onclick="filterFeed('all')">All</button>
-    <button onclick="filterFeed('livestock')">Livestock</button>
-    <button onclick="filterFeed('crop')">Crop Production</button>
-    <button onclick="filterFeed('services')">Services</button>
-    <button onclick="filterFeed('fish')">Fish Farming</button>
-    <button onclick="filterFeed('agrovet')">Agrovet</button>
-    <button onclick="filterFeed('equipment')">Equipment</button>
-    <button onclick="filterFeed('others')">Others</button>
+    <button onclick="filterFeed('all')">🌾 All</button>
+    <button onclick="filterFeed('livestock')">🐄 Livestock</button>
+    <button onclick="filterFeed('crop')">🌽 Crops</button>
+    <button onclick="filterFeed('services')">🛠 Services</button>
+    <button onclick="filterFeed('fish')">🐟 Fish</button>
+    <button onclick="filterFeed('agrovet')">🌱 Agrovet</button>
+    <button onclick="filterFeed('equipment')">🚜 Equipment</button>
+    <button onclick="filterFeed('others')">📦 Others</button>
+
+    <button onclick="location.href='loans.html'">💰 Loans</button>
+    <button onclick="location.href='learninghub.html'">📚 Learning Hub</button>
+    <button onclick="location.href='weather.html'">🌤 Weather</button>
+    <button onclick="location.href='finances.html'">💳 My Finances</button>
   </div>
 
-  <div id="verifyActionBox">
-    <button class="btn" style="background:#2563eb;color:#fff;" onclick="location.href='verify.html'">
-      🔐 Get Verified
+  <div id="verifyActionBox" class="verify-card">
+
+    <div class="verify-header">
+        <h3>🛡️ Farmer Verification</h3>
+        <span id="verifyStatus" class="status pending">Not Verified</span>
+    </div>
+
+    <p class="verify-text">
+        Verify your account to securely buy and sell on AgriHub.
+        Verified farmers build trust and access all marketplace features.
+    </p>
+
+    <button class="verify-btn" onclick="location.href='verify.html'">
+        Verify
     </button>
-  </div>
+
+</div>
+
 </div>
 
 <!-- FEED -->
 <div class="feed" id="feed">Loading...</div>
 
-<!-- BOTTOM NAV (FIXED MISSING FEATURE) -->
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button onclick="location.href='farmerdashboard.html'">
     <i class="fa fa-home"></i>
     Home
   </button>
 
-  <button onclick="location.href='messages.html'">
-    <i class="fa fa-comment"></i>
-    Chat
+ <button onclick="location.href='mylistings.html'">
+    <i class="fa fa-box"></i>
+    My Listings
+</button>
+
+  <button onclick="location.href='sell.html'">
+    <i class="fa fa-plus"></i>
+    Sell
   </button>
 
-  <button onclick="location.href='more.html'">
-    <i class="fa fa-ellipsis-h"></i>
-    More
+  <button onclick="logout()">
+    <i class="fa fa-right-from-bracket"></i>
+    Logout
   </button>
 </div>
 
 <script>
-
 const sb = supabase.createClient(
   "https://wfbepkegbtxszhhozqtz.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
 );
 
 const user = JSON.parse(localStorage.getItem("agrihub_user"));
-if(!user) window.location.href="index.html";
+if (!user) window.location.href = "index.html";
 
+/* =========================
+   STATE
+========================= */
 let verifiedUsers = new Set();
+let userVerificationStatus = "notverified";
 let allProducts = [];
 
-/* LOAD VERIFICATION */
-async function loadVerification(){
-  const { data } = await sb.from("users").select("id, verification_status");
+/* =========================
+   LOAD USER PROFILE
+========================= */
+async function loadUser() {
+  const { data } = await sb
+    .from("users")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
 
-  verifiedUsers = new Set(
-    (data||[])
-      .filter(u => (u.verification_status||"").toLowerCase()==="verified")
-      .map(u => u.id)
-  );
+  document.getElementById("welcomeText").innerText =
+    `Welcome, ${data?.full_name || "User"}`;
+
+  document.getElementById("userAvatar").src =
+    `https://i.pravatar.cc/100?u=${user.id}`;
 }
 
-/* LOAD FEED */
-async function loadFeed(){
-  const { data } = await sb.from("products")
+/* =========================
+   VERIFICATION (CLEAN LOGIC)
+========================= */
+async function loadVerification() {
+
+  const { data, error } = await sb
+    .from("verifications")
+    .select("user_id, status");
+
+  if (error) {
+    console.error("Verification error:", error);
+    return;
+  }
+
+  // Build verified set
+  verifiedUsers = new Set(
+    (data || [])
+      .filter(v => v.status === "verified")
+      .map(v => v.user_id)
+  );
+
+  // get current user status
+  const my = data?.find(v => v.user_id === user.id);
+
+  userVerificationStatus = my?.status || "notverified";
+
+  updateVerificationUI();
+}
+
+/* =========================
+   UPDATE UI STATUS CARD
+========================= */
+function updateVerificationUI() {
+  const badge = document.getElementById("verifyStatus");
+
+  if (!badge) return;
+
+  badge.classList.remove("verified", "pending", "rejected", "notverified");
+
+  if (userVerificationStatus === "verified") {
+    badge.innerText = "Verified";
+    badge.classList.add("verified");
+  }
+
+  else if (userVerificationStatus === "pending") {
+    badge.innerText = "Pending Review";
+    badge.classList.add("pending");
+  }
+
+  else if (userVerificationStatus === "rejected") {
+    badge.innerText = "Rejected";
+    badge.classList.add("rejected");
+  }
+
+  else {
+    badge.innerText = "Not Verified";
+    badge.classList.add("notverified");
+  }
+}
+
+/* =========================
+   FEED
+========================= */
+async function loadFeed() {
+  const { data } = await sb
+    .from("products")
     .select("*")
-    .order("created_at",{ascending:false});
+    .order("created_at", { ascending: false });
 
   allProducts = data || [];
   updateStats(allProducts);
   renderFeed(allProducts);
 }
 
-/* STATS */
-function updateStats(data){
+function updateStats(data) {
   document.getElementById("activeCount").innerText =
-    data.filter(p=>!p.sold).length;
+    data.filter(p => !p.sold).length;
 }
 
-/* TIME */
-function formatTimeAgo(date){
-  if(!date) return "";
-  const diff = Math.floor((new Date()-new Date(date))/1000);
-  if(diff<60) return diff+"s ago";
-  if(diff<3600) return Math.floor(diff/60)+"m ago";
-  if(diff<86400) return Math.floor(diff/3600)+"h ago";
-  return Math.floor(diff/86400)+"d ago";
+/* =========================
+   TIME FORMAT
+========================= */
+function formatTimeAgo(date) {
+  const diff = Math.floor((new Date() - new Date(date)) / 1000);
+  if (diff < 60) return diff + "s ago";
+  if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+  if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+  return Math.floor(diff / 86400) + "d ago";
 }
 
-/* RENDER FEED */
-function renderFeed(data){
-
+/* =========================
+   RENDER FEED (LOCK LOGIC FIXED)
+========================= */
+function renderFeed(data) {
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
-  const isVerified = verifiedUsers.has(user.id);
+  const isVerified = userVerificationStatus === "verified";
 
-  data.forEach(p=>{
-
+  data.forEach(p => {
     const div = document.createElement("div");
 
     div.innerHTML = `
@@ -357,16 +618,20 @@ function renderFeed(data){
         </div>
 
         <div class="actions">
-          <button class="small-btn whatsapp ${!isVerified?'locked':''}">WhatsApp</button>
 
-          <button class="small-btn ${!isVerified?'locked':''}"
+          <button class="small-btn ${!isVerified ? 'locked' : ''}">
+            WhatsApp
+          </button>
+
+          <button class="small-btn ${!isVerified ? 'locked' : ''}"
             onclick="${isVerified ? `openChat('${p.user_id}','${p.seller_name}')` : ''}">
             Message
           </button>
 
-          <button class="small-btn like-btn" onclick="toggleLike('${p.id}')">
-            ❤️ <span id="like-${p.id}">${p.likes||0}</span>
+          <button class="small-btn" onclick="toggleLike('${p.id}')">
+            ❤️ <span id="like-${p.id}">${p.likes || 0}</span>
           </button>
+
         </div>
 
       </div>
@@ -376,69 +641,130 @@ function renderFeed(data){
   });
 }
 
-/* LIKE */
-async function toggleLike(id){
+/* =========================
+   LIKE
+========================= */
+async function toggleLike(id) {
+  const post = allProducts.find(p => p.id === id);
+  if (!post) return;
 
-  const post = allProducts.find(p=>p.id===id);
-  if(!post) return;
-
-  post.likes = (post.likes||0)+1;
+  post.likes = (post.likes || 0) + 1;
 
   document.getElementById(`like-${id}`).innerText = post.likes;
 
-  await sb.from("products")
-    .update({likes:post.likes})
-    .eq("id",id);
+  await sb
+    .from("products")
+    .update({ likes: post.likes })
+    .eq("id", id);
 }
 
-/* FILTER */
-function filterFeed(cat){
+/* =========================
+   CHAT
+========================= */
+async function openChat(sellerId, sellerName) {
 
-  if(cat==="all"){
-    renderFeed(allProducts);
+  if (userVerificationStatus !== "verified") {
+    alert("You must be verified to message sellers.");
     return;
   }
 
-  renderFeed(allProducts.filter(p=>(p.category||"").toLowerCase()===cat));
-}
-
-/* CHAT */
-async function openChat(sellerId,sellerName){
-
-  if(!verifiedUsers.has(user.id)){
-    alert("Verify first");
-    return;
-  }
-
-  let { data } = await sb.from("conversations")
+  let { data } = await sb
+    .from("conversations")
     .select("*")
     .or(`and(user1.eq.${user.id},user2.eq.${sellerId}),and(user1.eq.${sellerId},user2.eq.${user.id})`)
     .maybeSingle();
 
-  if(!data){
-    const { data:newC } = await sb.from("conversations")
-      .insert({user1:user.id,user2:sellerId})
+  if (!data) {
+    const { data: newC } = await sb
+      .from("conversations")
+      .insert({ user1: user.id, user2: sellerId })
       .select()
       .single();
-    data=newC;
+
+    data = newC;
   }
 
-  localStorage.setItem("chat_id",data.id);
-  window.location.href="chat.html";
+  localStorage.setItem("chat_id", data.id);
+  window.location.href = "chat.html";
 }
 
-/* LOGOUT */
-function logout(){
+/* =========================
+   FILTER
+========================= */
+function filterFeed(cat) {
+  if (cat === "all") return renderFeed(allProducts);
+  renderFeed(
+    allProducts.filter(p =>
+      (p.category || "").toLowerCase() === cat
+    )
+  );
+}
+
+/* =========================
+   LOGOUT
+========================= */
+function logout() {
   localStorage.removeItem("agrihub_user");
-  window.location.href="index.html";
+  window.location.href = "index.html";
 }
 
-/* INIT */
-(async()=>{
+/* =========================
+   INIT
+========================= */
+(async () => {
+  await loadUser();
   await loadVerification();
   await loadFeed();
+  await loadUnreadMessages(); // 🔴 ADD THIS BACK
 })();
+async function loadUnreadMessages() {
+  try {
+    const { data: conversations } = await sb
+      .from("conversations")
+      .select("id")
+      .or(`user1.eq.${user.id},user2.eq.${user.id}`);
 
+    const badge = document.getElementById("messageBadge");
+    if (!badge) return;
+
+    if (!conversations || conversations.length === 0) {
+      badge.style.display = "none";
+      return;
+    }
+
+    const ids = conversations.map(c => c.id);
+
+    const { count } = await sb
+      .from("messages")
+      .select("*", { count: "exact", head: true })
+      .in("conversation_id", ids)
+      .neq("sender_id", user.id)
+      .eq("is_read", false);
+
+    if (count && count > 0) {
+      badge.style.display = "flex";
+      badge.innerText = count > 99 ? "99+" : count;
+    } else {
+      badge.style.display = "none";
+    }
+
+  } catch (err) {
+    console.error("Badge error:", err);
+  }
+}
+sb.channel("messages-badge-live")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "messages"
+    },
+    () => {
+      loadUnreadMessages();
+    }
+  )
+  .subscribe();
 </script>
 
 </body>
