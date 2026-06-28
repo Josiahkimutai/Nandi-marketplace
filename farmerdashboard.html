@@ -508,6 +508,27 @@ async function loadUser() {
   document.getElementById("userAvatar").src =
     `https://i.pravatar.cc/100?u=${user.id}`;
 }
+function getCurrentUser() {
+    try {
+        const raw = localStorage.getItem("agrihub_user");
+
+        if (!raw || raw === "null" || raw === "undefined") {
+            return null;
+        }
+
+        const user = JSON.parse(raw);
+
+        if (!user || !user.id) {
+            return null;
+        }
+
+        return user;
+
+    } catch (e) {
+        console.error("User parse failed:", e);
+        return null;
+    }
+}
 
 let isVerified = false;
 
@@ -611,7 +632,8 @@ function renderFeed(data) {
   const allowed = isVerified === true;
 
   data.forEach(p => {
-
+console.log("FULL PRODUCT:", p);
+console.log("PRODUCT USER ID:", p.user_id);
     const sellerId = p.user_id || null;
     const sellerName = p.seller_name || "Seller";
 
@@ -727,7 +749,72 @@ function logout() {
   localStorage.removeItem("agrihub_user");
   window.location.href = "index.html";
 }
+/* =========================
+   OPEN CHAT
+========================= */
+async function openChat(otherUserId, otherUserName) {
 
+  if (!otherUserId) {
+    alert("Seller ID missing.");
+    return;
+  }
+
+  if (String(otherUserId) === String(user.id)) {
+    alert("You cannot message yourself.");
+    return;
+  }
+
+  try {
+
+    // Look for an existing conversation
+    let { data: conversation, error } = await sb
+      .from("conversations")
+      .select("*")
+      .or(
+        `and(user1.eq.${user.id},user2.eq.${otherUserId}),and(user1.eq.${otherUserId},user2.eq.${user.id})`
+      )
+      .maybeSingle();
+
+    if (error) {
+      console.error("Conversation lookup:", error);
+      alert(error.message);
+      return;
+    }
+
+    // Create one if it doesn't exist
+    if (!conversation) {
+
+      const { data, error: createError } = await sb
+        .from("conversations")
+        .insert([
+          {
+            user1: user.id,
+            user2: otherUserId
+          }
+        ])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Conversation create:", createError);
+        alert(createError.message);
+        return;
+      }
+
+      conversation = data;
+    }
+
+    localStorage.setItem("chat_id", conversation.id);
+    localStorage.setItem("chat_user", otherUserId);
+    localStorage.setItem("chat_name", otherUserName);
+
+    window.location.href = "chat.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to open chat.");
+  }
+}
 /* =========================
    INIT
 ========================= */

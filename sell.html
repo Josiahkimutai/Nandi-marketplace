@@ -23,7 +23,6 @@
       align-items:center;
       padding:20px;
     }
-
     .card{
       width:100%;
       max-width:560px;
@@ -227,154 +226,169 @@
 
     <a class="back-link" href="farmerdashboard.html">← Back to Dashboard</a>
   </div>
+<script>
+const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
 
-  <script>
-    const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const currentUser = JSON.parse(localStorage.getItem("agrihub_user"));
+/* ================= SAFE USER LOADING (FIXED) ================= */
+function getCurrentUser() {
+    try {
+        const raw = localStorage.getItem("agrihub_user");
 
-    if (!currentUser) {
-      window.location.href = "index.html";
-    }
-
-    const sellerName = currentUser?.full_name || currentUser?.name || "Farmer";
-    const sellerBox = document.getElementById("sellerBox");
-    const postBtn = document.getElementById("postBtn");
-
-    sellerBox.textContent = "Logged in as: " + sellerName;
-
-    function showMsg(text, type){
-      const msg = document.getElementById("msg");
-      msg.style.display = "block";
-      msg.className = "msg " + type;
-      msg.textContent = text;
-    }
-
-    function clearMsg(){
-      const msg = document.getElementById("msg");
-      msg.style.display = "none";
-      msg.className = "msg";
-      msg.textContent = "";
-    }
-
-    function cleanWhatsAppNumber(raw){
-      if(!raw) return "";
-      let value = raw.trim();
-
-      // Remove spaces, dashes, brackets
-      value = value.replace(/[^\d+]/g, "");
-
-      // Convert +2547... -> 2547...
-      if(value.startsWith("+")){
-        value = value.substring(1);
-      }
-
-      // Convert 07xxxxxxxx -> 2547xxxxxxxx
-      if(/^0\d+$/.test(value)){
-        value = "254" + value.substring(1);
-      }
-
-      return value;
-    }
-
-    async function addProduct(){
-      clearMsg();
-
-      const name = document.getElementById("name").value.trim();
-      const price = document.getElementById("price").value.trim();
-      const quantity = document.getElementById("quantity").value.trim();
-      const location = document.getElementById("location").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const whatsappRaw = document.getElementById("whatsapp").value.trim();
-      const imageFile = document.getElementById("imageFile").files[0];
-
-      if (!name || !price || !quantity || !location) {
-        showMsg("Please fill all required fields.", "error");
-        return;
-      }
-
-      const whatsapp_number = cleanWhatsAppNumber(whatsappRaw);
-
-      postBtn.disabled = true;
-      postBtn.textContent = "Posting...";
-
-      try {
-        let imageUrl = "";
-
-        // Upload image if selected
-        if (imageFile) {
-          const cleanName = imageFile.name.replace(/\s+/g, "_");
-          const fileName = `product_${Date.now()}_${cleanName}`;
-
-          const { error: uploadError } = await sb
-            .storage
-            .from("product-images")
-            .upload(fileName, imageFile);
-
-          if (uploadError) {
-            throw uploadError;
-          }
-
-          const { data: publicData } = sb
-            .storage
-            .from("product-images")
-            .getPublicUrl(fileName);
-
-          imageUrl = publicData?.publicUrl || "";
+        if (!raw || raw === "null" || raw === "undefined") {
+            return null;
         }
 
-        /*
-          IMPORTANT FIX:
-          We are NOT inserting user_id because your products.user_id column
-          is currently bigint in Supabase, while currentUser.id is UUID.
-          That mismatch is what caused:
-          invalid input syntax for type bigint: "821c73df-..."
-        */
+        const user = JSON.parse(raw);
+
+        if (!user || !user.id) {
+            return null;
+        }
+
+        return user;
+
+    } catch (e) {
+        console.error("USER PARSE ERROR:", e);
+        return null;
+    }
+}
+
+let currentUser = getCurrentUser();
+
+/* HARD STOP */
+if (!currentUser) {
+    alert("Session expired. Please login again.");
+    window.location.href = "index.html";
+}
+
+/* ================= UI ================= */
+const sellerName = currentUser.full_name || "Farmer";
+document.getElementById("sellerBox").innerText = "Logged in as: " + sellerName;
+
+const postBtn = document.getElementById("postBtn");
+
+/* ================= HELPERS ================= */
+function showMsg(text, type) {
+    const msg = document.getElementById("msg");
+    msg.style.display = "block";
+    msg.className = "msg " + type;
+    msg.innerText = text;
+}
+
+function clearMsg() {
+    const msg = document.getElementById("msg");
+    msg.style.display = "none";
+    msg.className = "msg";
+    msg.innerText = "";
+}
+
+function cleanWhatsAppNumber(raw) {
+    if (!raw) return null;
+
+    let value = raw.trim().replace(/[^\d+]/g, "");
+
+    if (value.startsWith("+")) value = value.slice(1);
+    if (value.startsWith("0")) value = "254" + value.slice(1);
+
+    return value;
+}
+
+/* ================= MAIN FUNCTION ================= */
+async function addProduct() {
+
+    clearMsg();
+
+    // 🔥 FINAL DEBUG
+    console.log("USER OBJECT:", currentUser);
+    console.log("USER ID:", currentUser?.id);
+
+    if (!currentUser?.id) {
+        showMsg("User ID missing. Please login again.", "error");
+        return;
+    }
+
+    const name = document.getElementById("name").value.trim();
+    const price = document.getElementById("price").value.trim();
+    const quantity = document.getElementById("quantity").value.trim();
+    const location = document.getElementById("location").value.trim();
+    const description = document.getElementById("description").value.trim();
+    const whatsappRaw = document.getElementById("whatsapp").value.trim();
+    const imageFile = document.getElementById("imageFile").files[0];
+
+    if (!name || !price || !quantity || !location) {
+        showMsg("Fill all required fields", "error");
+        return;
+    }
+
+    postBtn.disabled = true;
+    postBtn.innerText = "Posting...";
+
+    try {
+
+        let imageUrl = null;
+
+        if (imageFile) {
+            const filename = `${Date.now()}_${imageFile.name.replace(/\s/g, "_")}`;
+
+            const { error: uploadError } = await sb.storage
+                .from("product-images")
+                .upload(filename, imageFile);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = sb.storage
+                .from("product-images")
+                .getPublicUrl(filename);
+
+            imageUrl = data.publicUrl;
+        }
+
+        /* 🔥 FINAL PAYLOAD (FORCED VALID UUID) */
         const productPayload = {
-          name,
-          price: Number(price),
-          quantity,
-          location,
-          description: description || null,
-          image_url: imageUrl || null,
-          seller_name: sellerName,
-          sold: false,
-          whatsapp_number: whatsapp_number || null
+            user_id: String(currentUser.id).trim(),
+            seller_name: sellerName,
+            whatsapp_number: cleanWhatsAppNumber(whatsappRaw),
+            name,
+            price: Number(price),
+            quantity,
+            location,
+            description: description || null,
+            image_url: imageUrl,
+            sold: false
         };
 
-        const { error } = await sb
-          .from("products")
-          .insert([productPayload]);
+        console.log("FINAL PAYLOAD:", productPayload);
+
+        const { data, error } = await sb
+            .from("products")
+            .insert([productPayload])
+            .select();
 
         if (error) {
-          throw error;
+            console.error("SUPABASE ERROR:", error);
+            throw error;
         }
+
+        console.log("INSERTED ROW:", data);
 
         showMsg("Product posted successfully ✅", "success");
 
-        document.getElementById("name").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("quantity").value = "";
-        document.getElementById("location").value = "";
-        document.getElementById("description").value = "";
-        document.getElementById("whatsapp").value = "";
-        document.getElementById("imageFile").value = "";
-
         setTimeout(() => {
-          window.location.href = "farmerdashboard.html";
+            window.location.href = "farmerdashboard.html";
         }, 1200);
 
-      } catch (err) {
-        console.error("Product post error:", err);
-        showMsg(err.message || "Something went wrong while posting.", "error");
-      } finally {
+    } catch (err) {
+        console.error("POST ERROR:", err);
+        showMsg(err.message || "Failed to post product", "error");
+
+    } finally {
         postBtn.disabled = false;
-        postBtn.textContent = "Post Product";
-      }
+        postBtn.innerText = "Post Product";
     }
-  </script>
+}
+</script>
 
 </body>
 </html>
