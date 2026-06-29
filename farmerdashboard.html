@@ -63,23 +63,27 @@ body{
 
 /* DASHBOARD BAR */
 .dashboard-bar{
-  background:#fff;
-  margin:10px 14px;
-  padding:14px;
-  border-radius:16px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    background:transparent;
+    box-shadow:none;
+    border:none;
 
-  position:sticky;
-  top:60px;      /* Position just below the topbar */
-  z-index:999;
+    margin:10px 14px;
+    padding:0;
 
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-
+    position:sticky;
+    top:60px;
+    z-index:999;
 }
 
-.row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+
+    background:transparent;
+    padding:0;
+}
 
 .sell-btn{
   background:#1f8f4e;
@@ -90,50 +94,191 @@ body{
   font-weight:800;
   cursor:pointer;
 }
-
 /* CATEGORY BAR */
+
+/* ===========================
+   CATEGORY BAR
+=========================== */
+
 .filter-bar{
-    margin:10px 14px;
-    background:#fff;
-    border-radius:18px;
-    padding:15px;
-    box-shadow:0 3px 12px rgba(0,0,0,.08);
+    margin:10px;
+    padding:10px;
+
+    background:#f8faf9;
+    border-radius:22px;
+
+    border:1px solid #e5e7eb;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.06);
+
+    position:sticky;
+    top:58px;
+
+    z-index:998;
+
+    transition:all .3s ease;
 }
+
+.filter-bar.hide{
+    opacity:0;
+    transform:translateY(-120%);
+    pointer-events:none;
+
+}
+/* ===========================
+   COMPACT CATEGORY GRID
+=========================== */
+/* ===========================
+   ULTRA COMPACT CATEGORY GRID
+=========================== */
 
 .category-scroll{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-    margin-bottom:15px;
+    grid-template-columns:repeat(6,1fr);
+    gap:8px;
 }
 
-.category-scroll button{
+.cat-btn{
+
+    position:relative;
+
+    background:transparent;
     border:none;
-    background:#eef6f1;
-    color:#24553a;
-    padding:12px 8px;
-    border-radius:12px;
-    font-size:13px;
-    font-weight:700;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
     cursor:pointer;
+
+    padding:2px;
+}
+
+.cat-btn i{
+
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:18px;
+
+    background:#ffffff;
+
+    border:2px solid #d9e6dc;
+
+    color:#1f8f4e;
+
+    box-shadow:0 2px 6px rgba(0,0,0,.05);
+
     transition:.25s;
 }
 
-.category-scroll button:hover{
-    background:#dceee2;
-    transform:translateY(-2px);
+.cat-btn:hover i{
+
+    background:#1f8f4e;
+
+    color:white;
+
+    border-color:#1f8f4e;
+
+    transform:scale(1.08);
 }
 
-.category-scroll button:active{
-    transform:scale(.97);
+.cat-btn small{
+
+    margin-top:4px;
+
+    font-size:9px;
+
+    font-weight:700;
+
+    color:#444;
+
+    text-align:center;
 }
 
+/* Notification Badge */
+
+.cat-badge{
+
+    position:absolute;
+
+    top:-2px;
+    right:6px;
+
+    min-width:16px;
+    height:16px;
+
+    border-radius:50%;
+
+    background:#ef4444;
+
+    color:#fff;
+
+    font-size:8px;
+
+    font-weight:800;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:2px solid white;
+}
+
+/* Icon Colors */
+
+.cat-btn:nth-child(1) i{background:#DCFCE7;color:#16A34A;}
+.cat-btn:nth-child(2) i{background:#DCFCE7;color:#16A34A;}
+.cat-btn:nth-child(3) i{background:#DBEAFE;color:#2563EB;}
+.cat-btn:nth-child(4) i{background:#FCE7F3;color:#EC4899;}
+.cat-btn:nth-child(5) i{background:#FFEDD5;color:#EA580C;}
+.cat-btn:nth-child(6) i{background:#FEE2E2;color:#DC2626;}
+.cat-btn:nth-child(7) i{background:#EDE9FE;color:#7C3AED;}
+.cat-btn:nth-child(8) i{background:#CFFAFE;color:#0891B2;}
+.cat-btn:nth-child(9) i{background:#E5E7EB;color:#6B7280;}
+.cat-btn:nth-child(10) i{background:#FEF3C7;color:#D97706;}
+.cat-btn:nth-child(11) i{background:#D1FAE5;color:#059669;}
+.cat-btn:nth-child(12) i{background:#DBEAFE;color:#0284C7;}
+.cat-btn:nth-child(13) i{background:#FFEDD5;color:#F97316;}
+.cat-btn:nth-child(14) i{background:#CCFBF1;color:#0F766E;}
+.cat-btn:nth-child(15) i{background:#FEE2E2;color:#EF4444;}
+/* Badge */
+
+.cat-badge{
+    position:absolute;
+    top:6px;
+    right:6px;
+
+    min-width:20px;
+    height:20px;
+
+    border-radius:50%;
+
+    background:#ef4444;
+    color:#fff;
+
+    font-size:10px;
+    font-weight:800;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:2px solid white;
+}
 /* FEED */
 .feed{
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+    padding:8px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
 .post{
@@ -165,7 +310,14 @@ body{
     font-weight:700;
     cursor:pointer;
 }
+html{
+    scroll-behavior:auto;
+    -webkit-overflow-scrolling:touch;
+}
 
+body{
+    overflow-y:auto;
+}
 .message-badge{
     position:absolute;
     top:-6px;
@@ -183,56 +335,120 @@ body{
     border:2px solid white;
 
 }
+.post{
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid #ececec;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+.post-header{
+    padding:8px 10px;
+}
+
+.post-header img{
+    width:34px;
+    height:34px;
+}
 .post-header img{
   width:40px;
   height:40px;
   border-radius:50%;
 }
+/* VERIFIED BADGE */
+
+.verified-badge{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#16a34a;
+    color:#fff;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    box-shadow:0 2px 6px rgba(22,163,74,.35);
+
+}
+/* PRODUCT IMAGE */
+/* PRODUCT IMAGE */
 
 .img-box{
-  width:100%;
-  height:420px;
-  background:#000;
-  position:relative;
+    width:100%;
+    height:260px;
+    background:#f5f5f5;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    position:relative;
 }
 
 .img-box img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+    width:150%;
+    height:100%;
+    object-fit:contain;
+    object-position:center;
+    transition:.3s ease;
 }
+
+.img-box img:hover{
+    transform:scale(1.03);
+}
+
+/* SOLD BADGE */
 
 .sold-overlay{
-  position:absolute;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.6);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:34px;
-  font-weight:900;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
+    width:120px;
+    height:60px;
+
+    background:rgba(40,40,40,.85);
+
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    color:#fff;
+    font-size:22px;
+    font-weight:900;
+    letter-spacing:1px;
+
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+}
+.post-body{
+    padding:8px 10px;
 }
 
-.post-body{padding:10px;}
-.price{color:#1f8f4e;font-weight:900;}
-.time{font-size:12px;color:#6b7280;margin-top:4px;}
+.post-body h3{
+    font-size:16px;
+    margin-bottom:4px;
+}
+
+.price{
+    font-size:18px;
+    font-weight:800;
+}
+
+.time{
+    font-size:11px;
+}
 
 .actions{
-  display:flex;
-  gap:8px;
-  padding:10px;
-  flex-wrap:wrap;
+    padding:8px;
+    gap:6px;
 }
 
 .small-btn{
-  padding:8px 10px;
-  border:none;
-  border-radius:10px;
-  font-weight:800;
-  background:#f1f5f9;
-  cursor:pointer;
+    padding:7px 10px;
+    font-size:12px;
+    border-radius:8px;
 }
 
 .locked{opacity:0.5;pointer-events:none;}
@@ -251,6 +467,39 @@ body{
     box-shadow:0 -5px 20px rgba(0,0,0,.12);
     border-top:1px solid #ddd;
 }
+.cat-icon{
+    position:relative;
+    font-size:26px;
+    display:inline-block;
+}
+
+.cat-label{
+    margin-top:6px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.cat-badge{
+    position:absolute;
+    top:-8px;
+    right:-10px;
+
+    min-width:18px;
+    height:18px;
+
+    background:#ef4444;
+    color:#fff;
+
+    border-radius:50%;
+    border:2px solid white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:10px;
+    font-weight:800;
+}
 
 .bottom-nav button{
     border:none;
@@ -264,68 +513,7 @@ body{
     cursor:pointer;
     transition:.25s;
 }
-.verify-btn{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  padding:10px 18px;
-  border-radius:12px;
-  font-size:14px;
-  font-weight:700;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  transition:0.3s;
-}
 
-.verify-btn:hover{
-  background:#1d4ed8;
-  transform:translateY(-2px);
-}
-.verify-card{
-    background:#f8fbf9;
-    border:1px solid #d9e9df;
-    border-radius:15px;
-    padding:15px;
-    margin-top:15px;
-}
-
-.verify-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:10px;
-}
-
-.verify-header h3{
-    margin:0;
-    font-size:17px;
-    color:#1f8f4e;
-}
-
-.verify-text{
-    color:#555;
-    font-size:14px;
-    line-height:1.5;
-    margin-bottom:15px;
-}
-
-.verify-btn{
-    width:100%;
-    border:none;
-    background:#2563eb;
-    color:white;
-    padding:12px;
-    border-radius:10px;
-    font-size:15px;
-    font-weight:700;
-    cursor:pointer;
-}
-
-.verify-btn:hover{
-    background:#1d4ed8;
-}
 
 .status{
     padding:5px 10px;
@@ -373,14 +561,123 @@ body{
 .verify-btn i{
   font-size:16px;
 }
+
+/* ==========================
+   PREMIUM FLOATING NAV
+========================== */
+
+.bottom-nav{
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:12px;
+
+    height:78px;
+
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+
+    background:rgba(20,20,20,0.88);
+
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+
+    border-radius:30px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+      0 15px 40px rgba(0,0,0,.35);
+
+    z-index:9999;
+
+    transition:all .35s ease;
+}
+
+.bottom-nav.hide{
+    transform:translateY(120%);
+    opacity:0;
+}
+
+.bottom-nav button{
+    flex:1;
+    height:100%;
+    border:none;
+    background:none;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    cursor:pointer;
+
+    color:white;
+
+    transition:.3s;
+}
+
 .bottom-nav button i{
-    font-size:22px;
+    font-size:24px;
     margin-bottom:4px;
+    transition:.3s;
+}
+
+.bottom-nav button span{
+    font-size:11px;
+    font-weight:700;
+    color:white;
+}
+
+/* HOME */
+.bottom-nav button:nth-child(1) i{
+    color:#3B82F6;
+}
+
+/* LISTINGS */
+.bottom-nav button:nth-child(2) i{
+    color:#22C55E;
+}
+
+/* SELL */
+.bottom-nav button:nth-child(3) i{
+    color:#F59E0B;
+    font-size:30px;
+}
+
+/* ACCOUNT */
+.bottom-nav button:nth-child(4) i{
+    color:#A855F7;
+}
+
+/* LOGOUT */
+.bottom-nav button:nth-child(5) i{
+    color:#EF4444;
 }
 
 .bottom-nav button:hover{
-    transform:translateY(-2px);
-    color:#15803d;
+    transform:translateY(-5px);
+}
+
+.bottom-nav button:hover i{
+    transform:scale(1.15);
+}
+
+/* ACTIVE BUTTON */
+
+.nav-active{
+    position:relative;
+}
+
+.nav-active::before{
+    content:'';
+    position:absolute;
+    top:8px;
+    width:40px;
+    height:40px;
+    background:rgba(255,255,255,.12);
+    border-radius:50%;
 }
 </style>
 </head>
@@ -391,7 +688,7 @@ body{
 <div class="topbar">
   <div class="logo">
     <i class="fa-solid fa-leaf"></i>
-    <b>AgriHub Nandi</b>
+    <b>Nandi Marketplace</b>
   </div>
 
   <div class="user-box">
@@ -403,7 +700,7 @@ body{
 <!-- DASHBOARD -->
 <div class="dashboard-bar">
   <div class="row">
-    <div><b>📊 Active Listings:</b> <span id="activeCount">0</span></div>
+    <div> </b> <span id="activeCount"></span></div>
    <button class="message-btn" onclick="location.href='inbox.html'">
     <i class="fa fa-comment"></i>
     Messages
@@ -413,41 +710,85 @@ body{
 </div>
 
 <!-- CATEGORY BAR -->
-<div class="filter-bar">
+<div class="filter-bar" id="categoryBar">
+<div class="category-scroll">
 
-  <div class="category-scroll">
-    <button onclick="filterFeed('all')">🌾 All</button>
-    <button onclick="filterFeed('livestock')">🐄 Livestock</button>
-    <button onclick="filterFeed('crop')">🌽 Crops</button>
-    <button onclick="filterFeed('services')">🛠 Services</button>
-    <button onclick="filterFeed('fish')">🐟 Fish</button>
-    <button onclick="filterFeed('agrovet')">🌱 Agrovet</button>
-    <button onclick="filterFeed('equipment')">🚜 Equipment</button>
-    <button onclick="filterFeed('others')">📦 Others</button>
-
-    <button onclick="location.href='loans.html'">💰 Loans</button>
-    <button onclick="location.href='learninghub.html'">📚 Learning Hub</button>
-    <button onclick="location.href='weather.html'">🌤 Weather</button>
-    <button onclick="location.href='finances.html'">💳 My Finances</button>
-  </div>
-
-  <div id="verifyActionBox" class="verify-card">
-
-    <div class="verify-header">
-        <h3>🛡️ Farmer Verification</h3>
-        <span id="verifyStatus" class="status pending">Not Verified</span>
-    </div>
-
-    <p class="verify-text">
-        Verify your account to securely buy and sell on AgriHub.
-        Verified farmers build trust and access all marketplace features.
-    </p>
-
-    <button class="verify-btn" onclick="location.href='verify.html'">
-        Verify
+    <button class="cat-btn" onclick="filterFeed('all')">
+        <span class="cat-badge" id="count-all">0</span>
+        <i class="fa-solid fa-store"></i>
+        <small>All</small>
     </button>
 
+    <button class="cat-btn" onclick="filterFeed('agriculture')">
+        <span class="cat-badge" id="count-agriculture">0</span>
+        <i class="fa-solid fa-wheat-awn"></i>
+        <small>Farm</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('electronics')">
+        <span class="cat-badge" id="count-electronics">0</span>
+        <i class="fa-solid fa-laptop"></i>
+        <small>Electronics</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('fashion')">
+        <span class="cat-badge" id="count-fashion">0</span>
+        <i class="fa-solid fa-shirt"></i>
+        <small>Fashion</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('home')">
+        <span class="cat-badge" id="count-home">0</span>
+        <i class="fa-solid fa-couch"></i>
+        <small>Home</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('vehicles')">
+        <span class="cat-badge" id="count-vehicles">0</span>
+        <i class="fa-solid fa-car"></i>
+        <small>Cars</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('property')">
+        <span class="cat-badge" id="count-property">0</span>
+        <i class="fa-solid fa-house"></i>
+        <small>Estate</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('services')">
+        <span class="cat-badge" id="count-services">0</span>
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <small>Services</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('others')">
+        <span class="cat-badge" id="count-others">0</span>
+        <i class="fa-solid fa-box-open"></i>
+        <small>Others</small>
+    </button>
+
+    <button class="cat-btn" onclick="location.href='jobs.html'">
+        <i class="fa-solid fa-briefcase"></i>
+        <small>Jobs</small>
+    </button>
+
+    <button class="cat-btn" onclick="location.href='transport.html'">
+        <i class="fa-solid fa-truck"></i>
+        <small>Transport</small>
+    </button>
+
+    <button class="cat-btn" onclick="location.href='vetservices.html'">
+        <i class="fa-solid fa-stethoscope"></i>
+        <small>Vet</small>
+    </button>
+
+
 </div>
+</div>
+
+</div>
+
+
 
 </div>
 
@@ -455,27 +796,34 @@ body{
 <div class="feed" id="feed">Loading...</div>
 
 <!-- BOTTOM NAV -->
-<div class="bottom-nav">
+<div class="bottom-nav" id="bottomNav">
+
   <button onclick="location.href='farmerdashboard.html'">
-    <i class="fa fa-home"></i>
-    Home
+      <i class="fa fa-home"></i>
+      Home
   </button>
 
- <button onclick="location.href='mylistings.html'">
-    <i class="fa fa-box"></i>
-    My Listings
-</button>
+  <button onclick="location.href='mylistings.html'">
+      <i class="fa fa-box"></i>
+      My Listings
+  </button>
 
   <button onclick="location.href='sell.html'">
-    <i class="fa fa-plus"></i>
-    Sell
+      <i class="fa fa-plus-circle"></i>
+      Sell
+  </button>
+
+  <button onclick="location.href='myaccount.html'">
+      <i class="fa fa-user"></i>
+      My Account
   </button>
 
   <button onclick="logout()">
-    <i class="fa fa-right-from-bracket"></i>
-    Logout
+      <i class="fa fa-right-from-bracket"></i>
+      Logout
   </button>
-</div>
+
+</div>>
 
 <script>
 const sb = supabase.createClient(
@@ -605,9 +953,34 @@ async function loadFeed() {
   renderFeed(allProducts);
 }
 
-function updateStats(data) {
-  document.getElementById("activeCount").innerText =
-    data.filter(p => !p.sold).length;
+function updateStats(products){
+
+    document.getElementById("count-all").innerText =
+        products.length;
+
+    document.getElementById("count-agriculture").innerText =
+        products.filter(p => p.category === "agriculture").length;
+
+    document.getElementById("count-electronics").innerText =
+        products.filter(p => p.category === "electronics").length;
+
+    document.getElementById("count-fashion").innerText =
+        products.filter(p => p.category === "fashion").length;
+
+    document.getElementById("count-home").innerText =
+        products.filter(p => p.category === "home").length;
+
+    document.getElementById("count-vehicles").innerText =
+        products.filter(p => p.category === "vehicles").length;
+
+    document.getElementById("count-property").innerText =
+        products.filter(p => p.category === "property").length;
+
+    document.getElementById("count-services").innerText =
+        products.filter(p => p.category === "services").length;
+
+    document.getElementById("count-others").innerText =
+        products.filter(p => p.category === "others").length;
 }
 
 /* =========================
@@ -620,20 +993,49 @@ function formatTimeAgo(date) {
   if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
   return Math.floor(diff / 86400) + "d ago";
 }
+/* =========================
+   VERIFIED USERS
+========================= */
+
+let verifiedUsers = {};
+
+async function loadVerifiedUsers() {
+
+    const { data, error } = await sb
+        .from("verifications")
+        .select("user_id,status");
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    verifiedUsers = {};
+
+    data.forEach(v => {
+
+        if (
+            v.status &&
+            (v.status.toLowerCase() === "verified" ||
+             v.status.toLowerCase() === "approved")
+        ) {
+            verifiedUsers[v.user_id] = true;
+        }
+
+    });
+
+}
 
 /* =========================
- /* =========================
+/* =========================
    RENDER FEED (FIXED)
 ========================= */
 function renderFeed(data) {
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
-  const allowed = isVerified === true;
-
   data.forEach(p => {
-console.log("FULL PRODUCT:", p);
-console.log("PRODUCT USER ID:", p.user_id);
+
     const sellerId = p.user_id || null;
     const sellerName = p.seller_name || "Seller";
 
@@ -645,42 +1047,54 @@ console.log("PRODUCT USER ID:", p.user_id);
     div.innerHTML = `
       <div class="post">
 
+        <!-- HEADER -->
         <div class="post-header">
           <div class="post-left">
             <img src="https://i.pravatar.cc/100?u=${sellerName}">
+            
             <b>${sellerName}</b>
+
+            <!-- VERIFIED BADGE -->
+            ${p.seller_verified ? `
+              <span style="
+                margin-left:6px;
+                color:#16a34a;
+                font-size:11px;
+                font-weight:900;
+                display:flex;
+                align-items:center;
+                gap:4px;
+              ">
+                ✔ Verified
+              </span>
+            ` : ""}
           </div>
         </div>
 
+        <!-- IMAGE -->
         <div class="img-box">
           <img src="${p.image_url}">
           ${p.sold ? `<div class="sold-overlay">SOLD</div>` : ""}
         </div>
 
+        <!-- BODY -->
         <div class="post-body">
           <h3>${p.name}</h3>
           <div class="price">KES ${p.price}</div>
           <div class="time">🕒 ${formatTimeAgo(p.created_at)}</div>
         </div>
 
+        <!-- ACTIONS -->
         <div class="actions">
 
-          <!-- WHATSAPP -->
-          <button class="small-btn whatsapp-btn"
-            style="background:${hasWhatsApp && allowed ? '#25D366' : '#ccc'}; color:white"
-            data-wa="${whatsappNumber}">
+          <button class="small-btn whatsapp-btn">
             WhatsApp
           </button>
 
-          <!-- MESSAGE -->
-          <button class="small-btn message-btn-post"
-            style="background:${allowed ? '#6b7280' : '#ccc'}; color:white"
-            data-id="${sellerId || ''}"
-            data-name="${sellerName}">
+          <button class="small-btn message-btn-post">
             Message
           </button>
 
-          <!-- LIKE -->
           <button class="small-btn" onclick="toggleLike('${p.id}')">
             ❤️ <span id="like-${p.id}">${p.likes || 0}</span>
           </button>
@@ -695,40 +1109,32 @@ console.log("PRODUCT USER ID:", p.user_id);
     // ======================
     // WHATSAPP CLICK
     // ======================
-    const waBtn = div.querySelector(".whatsapp-btn");
-
-    waBtn.addEventListener("click", () => {
-      if (!allowed || !hasWhatsApp) {
-        alert("WhatsApp not available or you are not verified");
+    div.querySelector(".whatsapp-btn").addEventListener("click", () => {
+      if (!isVerified) {
+        showVerifyPopup();
         return;
       }
+
+      if (!hasWhatsApp) return;
 
       window.open(`https://wa.me/${whatsappNumber}`, "_blank");
     });
 
     // ======================
-    // MESSAGE CLICK (FIXED)
+    // MESSAGE CLICK
     // ======================
-    const msgBtn = div.querySelector(".message-btn-post");
-
-    msgBtn.addEventListener("click", () => {
-
-      if (!allowed) {
-        alert("You must be verified to message sellers.");
+    div.querySelector(".message-btn-post").addEventListener("click", () => {
+      if (!isVerified) {
+        showVerifyPopup();
         return;
       }
 
-      if (!sellerId) {
-        alert("This seller cannot be contacted (missing user ID).");
-        console.log("Product missing user_id:", p);
-        return;
-      }
+      if (!sellerId) return;
 
       openChat(sellerId, sellerName);
     });
 
   });
-
 }
 /* =========================
    FILTER
@@ -819,10 +1225,17 @@ async function openChat(otherUserId, otherUserName) {
    INIT
 ========================= */
 (async () => {
-  await loadUser();
-  await loadVerification();
-  await loadFeed();
-  await loadUnreadMessages(); // 🔴 ADD THIS BACK
+
+    await loadUser();
+
+    await loadVerification();
+
+    await loadVerifiedUsers();
+
+    await loadFeed();
+
+    await loadUnreadMessages();
+
 })();
 async function loadUnreadMessages() {
   try {
@@ -872,7 +1285,110 @@ sb.channel("messages-badge-live")
     }
   )
   .subscribe();
-</script>
+  /* =========================
+   AUTO HIDE BOTTOM NAV
+========================= */
 
+let lastScrollTop = 0;
+
+const bottomNav = document.getElementById("bottomNav");
+const categoryBar = document.getElementById("categoryBar");
+
+window.addEventListener("scroll", function () {
+
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    // SCROLLING DOWN
+    if (scrollTop > lastScrollTop && scrollTop > 50) {
+
+        bottomNav.classList.add("hide");
+        categoryBar.classList.add("hide");
+
+    }
+
+    // SCROLLING UP
+    else {
+
+        bottomNav.classList.remove("hide");
+        categoryBar.classList.remove("hide");
+
+    }
+
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+
+});function showVerifyPopup() {
+  document.getElementById("verifyPopup").style.display = "flex";
+}
+
+function closeVerifyPopup() {
+  document.getElementById("verifyPopup").style.display = "none";
+}
+/* =========================
+   INIT
+========================= */
+(async () => {
+
+    await loadUser();
+
+    await loadVerification();
+
+    await loadVerifiedUsers();
+
+    await loadFeed();
+
+    await loadUnreadMessages();
+
+})();
+</script>
+<!-- VERIFY POPUP -->
+<div id="verifyPopup" style="
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+">
+  <div style="
+    background:#fff;
+    padding:20px;
+    border-radius:18px;
+    width:85%;
+    max-width:320px;
+    text-align:center;
+  ">
+    <div style="font-size:40px;color:#dc2626;">⚠</div>
+    <h3 style="margin:10px 0;color:#111;">Verification Required</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:15px;">
+      You must verify your account to contact sellers.
+    </p>
+
+    <button onclick="location.href='verify.html'" style="
+      background:#dc2626;
+      color:#fff;
+      border:none;
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:800;
+      cursor:pointer;
+      width:100%;
+    ">
+      Verify Now
+    </button>
+
+    <button onclick="closeVerifyPopup()" style="
+      margin-top:10px;
+      background:transparent;
+      border:none;
+      color:#666;
+      font-size:13px;
+      cursor:pointer;
+    ">
+      Cancel
+    </button>
+  </div>
+</div>
 </body>
 </html>
