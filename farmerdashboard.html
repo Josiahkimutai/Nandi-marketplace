@@ -22,13 +22,17 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:8px 10px;
+
+  padding:18px 10px 8px 10px;  /* 🔥 ADD MORE TOP SPACE */
+
   background:#fff;
   position:sticky;
   top:0;
   z-index:1000;
+
   box-shadow:0 2px 10px rgba(0,0,0,0.08);
   gap:10px;
+
 }
 
 .logo{
@@ -456,16 +460,44 @@ body{
 /* BOTTOM NAV UPDATED */
 .bottom-nav{
     position:fixed;
-    bottom:0;
-    left:0;
-    width:100%;
-    background:#fff;
+    left:8px;
+    right:8px;
+    bottom:8px;
+
+    height:60px;   /* reduced height */
+
     display:flex;
     justify-content:space-around;
     align-items:center;
-    padding:10px 0;
-    box-shadow:0 -5px 20px rgba(0,0,0,.12);
-    border-top:1px solid #ddd;
+
+    background:rgba(20,20,20,0.92);
+    backdrop-filter:blur(18px);
+
+    border-radius:22px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+
+    z-index:9999;
+    transition:all .3s ease;
+}
+@media (max-width: 480px){
+    .bottom-nav{
+        height:48px;
+        left:4px;
+        right:4px;
+        bottom:4px;
+        border-radius:14px;
+    }
+
+    .bottom-nav button i{
+        font-size:16px;
+    }
+
+    .bottom-nav button span{
+        font-size:8px;
+    }
 }
 .cat-icon{
     position:relative;
@@ -568,31 +600,26 @@ body{
 
 .bottom-nav{
     position:fixed;
-    left:12px;
-    right:12px;
-    bottom:12px;
+    left:6px;
+    right:6px;
+    bottom:6px;
 
-    height:78px;
+    height:52px; /* 🔥 thinner */
 
     display:flex;
     justify-content:space-around;
     align-items:center;
 
-    background:rgba(20,20,20,0.88);
+    background:rgba(20,20,20,0.92);
+    backdrop-filter:blur(15px);
 
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
-
-    border-radius:30px;
+    border-radius:18px;
 
     border:1px solid rgba(255,255,255,.08);
 
-    box-shadow:
-      0 15px 40px rgba(0,0,0,.35);
+    box-shadow:0 8px 18px rgba(0,0,0,.22);
 
     z-index:9999;
-
-    transition:all .35s ease;
 }
 
 .bottom-nav.hide{
@@ -619,9 +646,8 @@ body{
 }
 
 .bottom-nav button i{
-    font-size:24px;
-    margin-bottom:4px;
-    transition:.3s;
+    font-size:18px;  /* thinner look */
+    margin-bottom:2px;
 }
 
 .bottom-nav button span{
@@ -803,10 +829,23 @@ body{
       Home
   </button>
 
-  <button onclick="location.href='mylistings.html'">
-      <i class="fa fa-box"></i>
-      My Listings
-  </button>
+  <button onclick="location.href='mylistings.html'" style="position:relative;">
+    <i class="fa fa-box"></i>
+    My Listings
+
+    <!-- 🔥 BADGE -->
+    <span id="listingsBadge" class="cat-badge" style="
+        position:absolute;
+        top:-6px;
+        right:18px;
+        min-width:18px;
+        height:18px;
+        font-size:10px;
+        background:#e93609;
+    ">
+        0
+    </span>
+</button>
 
   <button onclick="location.href='sell.html'">
       <i class="fa fa-plus-circle"></i>
@@ -951,38 +990,81 @@ async function loadFeed() {
   allProducts = data || [];
   updateStats(allProducts);
   renderFeed(allProducts);
+  updateListingsBadge(allProducts);
 }
+function updateListingsBadge(products){
 
+    const myListings = products.filter(p => p.user_id === user.id);
+
+    const badge = document.getElementById("listingsBadge");
+
+    if(!badge) return;
+
+    if(myListings.length > 0){
+        badge.style.display = "flex";
+        badge.innerText = myListings.length > 99 ? "99+" : myListings.length;
+    } else {
+        badge.style.display = "none";
+    }
+}
 function updateStats(products){
 
-    document.getElementById("count-all").innerText =
-        products.length;
+    const categories = {
+        all: 0,
+        agriculture: 0,
+        electronics: 0,
+        fashion: 0,
+        home: 0,
+        vehicles: 0,
+        property: 0,
+        services: 0,
+        others: 0
+    };
 
-    document.getElementById("count-agriculture").innerText =
-        products.filter(p => p.category === "agriculture").length;
+    products.forEach(p => {
 
-    document.getElementById("count-electronics").innerText =
-        products.filter(p => p.category === "electronics").length;
+        categories.all++;
 
-    document.getElementById("count-fashion").innerText =
-        products.filter(p => p.category === "fashion").length;
+        const cat = (p.category || "others")
+            .toLowerCase()
+            .trim();
 
-    document.getElementById("count-home").innerText =
-        products.filter(p => p.category === "home").length;
+        if (cat === "agriculture") {
+            categories.agriculture++;
+        }
+        else if (cat === "electronics") {
+            categories.electronics++;
+        }
+        else if (cat === "fashion") {
+            categories.fashion++;
+        }
+        else if (cat === "home") {
+            categories.home++;
+        }
+        else if (cat === "vehicles") {
+            categories.vehicles++;
+        }
+        else if (cat === "property") {
+            categories.property++;
+        }
+        else if (cat === "services") {
+            categories.services++;
+        }
+        else {
+            categories.others++;
+        }
+    });
 
-    document.getElementById("count-vehicles").innerText =
-        products.filter(p => p.category === "vehicles").length;
-
-    document.getElementById("count-property").innerText =
-        products.filter(p => p.category === "property").length;
-
-    document.getElementById("count-services").innerText =
-        products.filter(p => p.category === "services").length;
-
-    document.getElementById("count-others").innerText =
-        products.filter(p => p.category === "others").length;
+    document.getElementById("count-all").innerText = categories.all;
+    document.getElementById("count-agriculture").innerText = categories.agriculture;
+    document.getElementById("count-electronics").innerText = categories.electronics;
+    document.getElementById("count-fashion").innerText = categories.fashion;
+    document.getElementById("count-home").innerText = categories.home;
+    document.getElementById("count-vehicles").innerText = categories.vehicles;
+    document.getElementById("count-property").innerText = categories.property;
+    document.getElementById("count-services").innerText = categories.services;
+    document.getElementById("count-others").innerText = categories.others;
 }
-
 /* =========================
    TIME FORMAT
 ========================= */

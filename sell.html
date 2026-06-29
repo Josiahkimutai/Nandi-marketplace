@@ -14,7 +14,47 @@
       box-sizing:border-box;
       font-family:Arial, sans-serif;
     }
+.category-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:15px;
+margin:20px 0;
+}
 
+.category-card{
+background:#fff;
+border:2px solid #ddd;
+border-radius:15px;
+padding:20px;
+text-align:center;
+cursor:pointer;
+transition:.3s;
+font-size:35px;
+font-weight:bold;
+}
+
+.category-card span{
+display:block;
+margin-top:10px;
+font-size:14px;
+color:#333;
+}
+
+.category-card:hover{
+transform:translateY(-5px);
+border-color:#1f8f4e;
+box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+
+.category-card.active{
+background:#1f8f4e;
+color:white;
+border-color:#1f8f4e;
+}
+
+.category-card.active span{
+color:white;
+}
     body{
       min-height:100vh;
       background:linear-gradient(135deg,#0f172a,#1f8f4e);
@@ -174,58 +214,96 @@
 <body>
 
   <div class="card">
+
     <h2>🌾 Sell Your Product</h2>
+
     <p class="subtitle">
-      Post your farm produce or service to the Nandi AgriHub marketplace
+        Select a category first. The form will automatically change depending on what you're selling.
     </p>
 
-    <div class="user-box" id="sellerBox">Logged in as: Loading...</div>
-
-    <div class="form-group">
-      <label for="name">Product Name</label>
-      <input id="name" type="text" placeholder="e.g. Maize, Beans, Potatoes" />
+    <div class="user-box" id="sellerBox">
+        Logged in as: Loading...
     </div>
 
-    <div class="form-group">
-      <label for="price">Price (KES)</label>
-      <input id="price" type="number" placeholder="e.g. 2500" />
+<!-- CATEGORY FIRST -->
+<div class="form-group">
+
+
+<input type="hidden" id="category">
+
+<div id="categorySection">
+
+<div class="category-grid">
+
+<div class="category-card" onclick="selectCategory('agriculture',this)">
+🌾
+<span>Agriculture</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('vehicles',this)">
+🚗
+<span>Vehicles</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('property',this)">
+🏡
+<span>Property</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('electronics',this)">
+💻
+<span>Electronics</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('fashion',this)">
+👕
+<span>Fashion</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('home',this)">
+🛋
+<span>Home</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('services',this)">
+🛠
+<span>Services</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('others',this)">
+📦
+<span>Others</span>
+</div>
+
+</div>
+
+</div>
+
+<div id="dynamicForm"></div>
+
+</div>
+
+<div class="right-panel">
+    <!-- DYNAMIC FORM -->
+    <div id="dynamicForm">
+
+        <div style="text-align:center;padding:40px;color:#888;">
+
+        </div>
+
     </div>
 
-    <div class="form-group">
-      <label for="quantity">Quantity</label>
-      <input id="quantity" type="text" placeholder="e.g. 5 bags, 200 kg, 20 trays" />
-    </div>
-
-    <div class="form-group">
-      <label for="location">Location</label>
-      <input id="location" type="text" placeholder="e.g. Kapsabet, Nandi Hills" />
-    </div>
-
-    <div class="form-group">
-      <label for="description">Description <span class="optional-badge">Optional</span></label>
-      <textarea id="description" placeholder="Add more details about the product, quality, packaging, delivery, harvest date, etc."></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="whatsapp">WhatsApp Number <span class="optional-badge">Optional</span></label>
-      <input id="whatsapp" type="text" placeholder="e.g. 254712345678" />
-      <div class="file-note">
-        Leave blank if the farmer does not have a WhatsApp number.
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="imageFile">Product Image <span class="optional-badge">Optional</span></label>
-      <input id="imageFile" type="file" accept="image/*" />
-      <div class="file-note">Optional but recommended for better visibility.</div>
-    </div>
-
-    <button id="postBtn" onclick="addProduct()">Post Product</button>
+    <button id="postBtn" onclick="addProduct()">
+        Post Product
+    </button>
 
     <div id="msg" class="msg"></div>
 
-    <a class="back-link" href="farmerdashboard.html">← Back to Dashboard</a>
-  </div>
+    <a class="back-link" href="farmerdashboard.html">
+        ← Back to Dashboard
+    </a>
+</div>
+</div>
 <script>
 const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
@@ -294,98 +372,446 @@ function cleanWhatsAppNumber(raw) {
 
     return value;
 }
+function selectCategory(category, element){
 
-/* ================= MAIN FUNCTION ================= */
+    document.getElementById("category").value = category;
+
+    document.getElementById("categorySection").style.display="none";
+
+    renderForm();
+}
+function renderForm() {
+function selectCategory(category, element){
+
+    document.getElementById("category").value = category;
+
+    document.querySelectorAll(".category-card")
+        .forEach(card => card.classList.remove("active"));
+
+    element.classList.add("active");
+
+    renderForm();
+}
+    const category = document.getElementById("category").value;
+    const container = document.getElementById("dynamicForm");
+
+    let html = "";
+
+    // ===== COMMON FIELDS =====
+
+    html += `
+        <div class="form-group">
+            <label>Product Name *</label>
+            <input id="name" type="text" required>
+        </div>
+
+        <div class="form-group">
+            <label>Price (KES) *</label>
+            <input id="price" type="number" required>
+        </div>
+    `;
+
+    // ================= AGRICULTURE =================
+
+    if(category === "agriculture"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Quantity</label>
+            <input id="quantity" placeholder="e.g 20 Bags">
+        </div>
+
+        <div class="form-group">
+            <label>Grade / Quality</label>
+            <input id="grade" placeholder="Grade A">
+        </div>
+
+        <div class="form-group">
+            <label>Harvest Date</label>
+            <input id="harvest_date" type="date">
+        </div>
+
+        `;
+    }
+
+    // ================= VEHICLES =================
+
+    else if(category === "vehicles"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Brand</label>
+            <input id="brand">
+        </div>
+
+        <div class="form-group">
+            <label>Model</label>
+            <input id="model">
+        </div>
+
+        <div class="form-group">
+            <label>Year</label>
+            <input id="year" type="number">
+        </div>
+
+        <div class="form-group">
+            <label>Engine Capacity (CC)</label>
+            <input id="engine">
+        </div>
+
+        <div class="form-group">
+            <label>Mileage (KM)</label>
+            <input id="mileage">
+        </div>
+
+        <div class="form-group">
+            <label>Fuel Type</label>
+            <select id="fuel">
+                <option>Petrol</option>
+                <option>Diesel</option>
+                <option>Hybrid</option>
+                <option>Electric</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Transmission</label>
+            <select id="transmission">
+                <option>Automatic</option>
+                <option>Manual</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Color</label>
+            <input id="color">
+        </div>
+
+        `;
+    }
+
+    // ================= PROPERTY =================
+
+    else if(category === "property"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Property Type</label>
+            <select id="property_type">
+                <option>Land</option>
+                <option>House</option>
+                <option>Apartment</option>
+                <option>Commercial</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Land Size</label>
+            <input id="size">
+        </div>
+
+        <div class="form-group">
+            <label>Bedrooms</label>
+            <input id="bedrooms" type="number">
+        </div>
+
+        <div class="form-group">
+            <label>Bathrooms</label>
+            <input id="bathrooms" type="number">
+        </div>
+
+        <div class="form-group">
+            <label>Title Deed</label>
+            <select id="title_deed">
+                <option>Yes</option>
+                <option>No</option>
+            </select>
+        </div>
+
+        `;
+    }
+
+    // ================= ELECTRONICS =================
+
+    else if(category === "electronics"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Brand</label>
+            <input id="brand">
+        </div>
+
+        <div class="form-group">
+            <label>Model</label>
+            <input id="model">
+        </div>
+
+        <div class="form-group">
+            <label>Condition</label>
+            <select id="condition">
+                <option>Brand New</option>
+                <option>Used</option>
+                <option>Refurbished</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Warranty</label>
+            <input id="warranty">
+        </div>
+
+        `;
+    }
+
+    // ================= FASHION =================
+
+    else if(category === "fashion"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Size</label>
+            <input id="size">
+        </div>
+
+        <div class="form-group">
+            <label>Color</label>
+            <input id="color">
+        </div>
+
+        <div class="form-group">
+            <label>Condition</label>
+            <select id="condition">
+                <option>New</option>
+                <option>Used</option>
+            </select>
+        </div>
+
+        `;
+    }
+
+    // ================= HOME =================
+
+    else if(category === "home"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Material</label>
+            <input id="material">
+        </div>
+
+        <div class="form-group">
+            <label>Condition</label>
+            <select id="condition">
+                <option>New</option>
+                <option>Used</option>
+            </select>
+        </div>
+
+        `;
+    }
+
+    // ================= SERVICES =================
+
+    else if(category === "services"){
+
+        html += `
+
+        <div class="form-group">
+            <label>Service Type</label>
+            <input id="service_type">
+        </div>
+
+        <div class="form-group">
+            <label>Years of Experience</label>
+            <input id="experience">
+        </div>
+
+        <div class="form-group">
+            <label>Availability</label>
+            <input id="availability" placeholder="Weekdays, Weekends etc">
+        </div>
+
+        `;
+    }
+
+    // ================= OTHERS =================
+
+    else{
+
+        html += `
+
+        <div class="form-group">
+            <label>Quantity</label>
+            <input id="quantity">
+        </div>
+
+        `;
+    }
+
+    // ===== COMMON BOTTOM FIELDS =====
+
+    html += `
+
+        <div class="form-group">
+            <label>Location *</label>
+            <input id="location" required>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="description"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>WhatsApp Number</label>
+            <input id="whatsapp">
+        </div>
+
+        <div class="form-group">
+            <label>Product Image</label>
+            <input id="imageFile" type="file" accept="image/*">
+        </div>
+
+    `;
+html = `
+<button
+onclick="backCategories()"
+style="
+margin-bottom:20px;
+background:#eee;
+color:#333;
+">
+← Back to Categories
+</button>
+
+<h2 style="margin-bottom:20px;text-align:center;">
+${category.toUpperCase()}
+</h2>
+
+` + html;
+    container.innerHTML = html;
+}
+function backCategories(){
+
+    document.getElementById("dynamicForm").innerHTML="";
+
+    document.getElementById("categorySection").style.display="block";
+
+    document.getElementById("category").value="";
+}
 async function addProduct() {
-
-    clearMsg();
-
-    // 🔥 FINAL DEBUG
-    console.log("USER OBJECT:", currentUser);
-    console.log("USER ID:", currentUser?.id);
-
-    if (!currentUser?.id) {
-        showMsg("User ID missing. Please login again.", "error");
-        return;
-    }
-
-    const name = document.getElementById("name").value.trim();
-    const price = document.getElementById("price").value.trim();
-    const quantity = document.getElementById("quantity").value.trim();
-    const location = document.getElementById("location").value.trim();
-    const description = document.getElementById("description").value.trim();
-    const whatsappRaw = document.getElementById("whatsapp").value.trim();
-    const imageFile = document.getElementById("imageFile").files[0];
-
-    if (!name || !price || !quantity || !location) {
-        showMsg("Fill all required fields", "error");
-        return;
-    }
-
-    postBtn.disabled = true;
-    postBtn.innerText = "Posting...";
+    alert("The Post button is working!");
+}
+async function addProduct() {
+    const btn = document.getElementById("postBtn");
+    const msg = document.getElementById("msg");
 
     try {
+        btn.disabled = true;
+        btn.innerText = "Posting...";
 
-        let imageUrl = null;
+        clearMsg();
 
-        if (imageFile) {
-            const filename = `${Date.now()}_${imageFile.name.replace(/\s/g, "_")}`;
-
-            const { error: uploadError } = await sb.storage
-                .from("product-images")
-                .upload(filename, imageFile);
-
-            if (uploadError) throw uploadError;
-
-            const { data } = sb.storage
-                .from("product-images")
-                .getPublicUrl(filename);
-
-            imageUrl = data.publicUrl;
+        const user = getCurrentUser();
+        if (!user) {
+            showMsg("Session expired. Please login again.", "error");
+            window.location.href = "index.html";
+            return;
         }
 
-        /* 🔥 FINAL PAYLOAD (FORCED VALID UUID) */
-        const productPayload = {
-            user_id: String(currentUser.id).trim(),
-            seller_name: sellerName,
-            whatsapp_number: cleanWhatsAppNumber(whatsappRaw),
+        // ===== GET BASIC FIELDS (from dynamic form) =====
+        const category = document.getElementById("category").value;
+        const name = document.getElementById("name")?.value;
+        const price = document.getElementById("price")?.value;
+        const location = document.getElementById("location")?.value;
+        const description = document.getElementById("description")?.value;
+        const whatsapp = cleanWhatsAppNumber(document.getElementById("whatsapp")?.value);
+
+        // ===== VALIDATION =====
+        if (!category || !name || !price || !location) {
+            showMsg("Please fill all required fields (*)", "error");
+            btn.disabled = false;
+            btn.innerText = "Post Product";
+            return;
+        }
+
+       // ===== IMAGE UPLOAD (OPTIONAL) =====
+let image_url = null;
+const fileInput = document.getElementById("imageFile");
+
+if (fileInput && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const fileName = `${Date.now()}-${file.name}`;
+
+    const { data: uploadData, error: uploadError } = await sb
+        .storage
+        .from("product-images")   // ✅ FIXED BUCKET NAME
+        .upload(fileName, file);
+
+    if (uploadError) {
+        console.error(uploadError);
+        showMsg("Image upload failed", "error");
+        btn.disabled = false;
+        btn.innerText = "Post Product";
+        return;
+    }
+
+    const { data } = sb.storage
+        .from("product-images")   // ✅ FIXED HERE TOO
+        .getPublicUrl(fileName);
+
+    image_url = data.publicUrl;
+}
+
+        // ===== BUILD PRODUCT DATA =====
+        const productData = {
+            user_id: user.id,
+            seller_name: user.full_name || "Farmer",
+            whatsapp_number: whatsapp,
+            category,
             name,
-            price: Number(price),
-            quantity,
+            price,
             location,
-            description: description || null,
-            image_url: imageUrl,
-            sold: false
+            description,
+            image_url,
+            created_at: new Date()
         };
 
-        console.log("FINAL PAYLOAD:", productPayload);
-
-        const { data, error } = await sb
+        // ===== INSERT INTO SUPABASE =====
+        const { error } = await sb
             .from("products")
-            .insert([productPayload])
-            .select();
+            .insert([productData]);
 
         if (error) {
-            console.error("SUPABASE ERROR:", error);
-            throw error;
+            console.error(error);
+            showMsg("Failed to post product", "error");
+        } else {
+            showMsg("Product posted successfully!", "success");
+
+document.getElementById("dynamicForm").innerHTML = "";
+
+setTimeout(() => {
+    window.location.href = "farmerdashboard.html";
+}, 1200);
+            // reset form
+            document.getElementById("dynamicForm").innerHTML = "";
+            document.getElementById("categorySection").style.display = "block";
+            document.getElementById("category").value = "";
         }
 
-        console.log("INSERTED ROW:", data);
-
-        showMsg("Product posted successfully ✅", "success");
-
-        setTimeout(() => {
-            window.location.href = "farmerdashboard.html";
-        }, 1200);
-
     } catch (err) {
-        console.error("POST ERROR:", err);
-        showMsg(err.message || "Failed to post product", "error");
+        console.error(err);
+        showMsg("Unexpected error occurred", "error");
 
     } finally {
-        postBtn.disabled = false;
-        postBtn.innerText = "Post Product";
+        btn.disabled = false;
+        btn.innerText = "Post Product";
     }
 }
 </script>
