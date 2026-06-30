@@ -286,13 +286,10 @@ color:white;
 <div class="right-panel">
     <!-- DYNAMIC FORM -->
     <div id="dynamicForm">
-
-        <div style="text-align:center;padding:40px;color:#888;">
-
-        </div>
-
+    <div style="text-align:center;padding:40px;color:#888;">
+        Select a category to start.
     </div>
-
+</div>
     <button id="postBtn" onclick="addProduct()">
         Post Product
     </button>
@@ -310,357 +307,87 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ================= SAFE USER LOADING (FIXED) ================= */
+/* ================= USER ================= */
 function getCurrentUser() {
     try {
         const raw = localStorage.getItem("agrihub_user");
-
-        if (!raw || raw === "null" || raw === "undefined") {
-            return null;
-        }
+        if (!raw || raw === "null") return null;
 
         const user = JSON.parse(raw);
-
-        if (!user || !user.id) {
-            return null;
-        }
+        if (!user?.id) return null;
 
         return user;
 
     } catch (e) {
-        console.error("USER PARSE ERROR:", e);
+        console.error(e);
         return null;
     }
 }
 
 let currentUser = getCurrentUser();
 
-/* HARD STOP */
 if (!currentUser) {
-    alert("Session expired. Please login again.");
+    alert("Session expired");
     window.location.href = "index.html";
 }
 
-/* ================= UI ================= */
-const sellerName = currentUser.full_name || "Farmer";
-document.getElementById("sellerBox").innerText = "Logged in as: " + sellerName;
+document.getElementById("sellerBox").innerText =
+    "Logged in as: " + (currentUser.full_name || "Farmer");
 
-const postBtn = document.getElementById("postBtn");
+/* ================= GLOBAL IMAGE STORE (FIX) ================= */
+let selectedImages = [];
 
-/* ================= HELPERS ================= */
-function showMsg(text, type) {
-    const msg = document.getElementById("msg");
-    msg.style.display = "block";
-    msg.className = "msg " + type;
-    msg.innerText = text;
-}
-
-function clearMsg() {
-    const msg = document.getElementById("msg");
-    msg.style.display = "none";
-    msg.className = "msg";
-    msg.innerText = "";
-}
-
-function cleanWhatsAppNumber(raw) {
-    if (!raw) return null;
-
-    let value = raw.trim().replace(/[^\d+]/g, "");
-
-    if (value.startsWith("+")) value = value.slice(1);
-    if (value.startsWith("0")) value = "254" + value.slice(1);
-
-    return value;
-}
-function selectCategory(category, element){
-
-    document.getElementById("category").value = category;
-
-    document.getElementById("categorySection").style.display="none";
-
-    renderForm();
-}
-function renderForm() {
-function selectCategory(category, element){
+/* ================= CATEGORY ================= */
+function selectCategory(category, element) {
 
     document.getElementById("category").value = category;
 
     document.querySelectorAll(".category-card")
-        .forEach(card => card.classList.remove("active"));
+        .forEach(c => c.classList.remove("active"));
 
     element.classList.add("active");
 
+    document.getElementById("categorySection").style.display = "none";
+
     renderForm();
 }
+
+function backCategories() {
+    selectedImages = [];
+
+    document.getElementById("dynamicForm").innerHTML = "";
+    document.getElementById("categorySection").style.display = "block";
+    document.getElementById("category").value = "";
+}
+
+/* ================= RENDER FORM ================= */
+function renderForm() {
+
     const category = document.getElementById("category").value;
     const container = document.getElementById("dynamicForm");
 
-    let html = "";
+    let html = `
+        <button onclick="backCategories()" style="margin-bottom:20px;">
+            ← Back
+        </button>
 
-    // ===== COMMON FIELDS =====
+        <h2>${category.toUpperCase()}</h2>
 
-    html += `
         <div class="form-group">
             <label>Product Name *</label>
-            <input id="name" type="text" required>
+            <input id="name">
         </div>
 
         <div class="form-group">
-            <label>Price (KES) *</label>
-            <input id="price" type="number" required>
+            <label>Price *</label>
+            <input id="price" type="number">
         </div>
     `;
 
-    // ================= AGRICULTURE =================
-
-    if(category === "agriculture"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Quantity</label>
-            <input id="quantity" placeholder="e.g 20 Bags">
-        </div>
-
-        <div class="form-group">
-            <label>Grade / Quality</label>
-            <input id="grade" placeholder="Grade A">
-        </div>
-
-        <div class="form-group">
-            <label>Harvest Date</label>
-            <input id="harvest_date" type="date">
-        </div>
-
-        `;
-    }
-
-    // ================= VEHICLES =================
-
-    else if(category === "vehicles"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Brand</label>
-            <input id="brand">
-        </div>
-
-        <div class="form-group">
-            <label>Model</label>
-            <input id="model">
-        </div>
-
-        <div class="form-group">
-            <label>Year</label>
-            <input id="year" type="number">
-        </div>
-
-        <div class="form-group">
-            <label>Engine Capacity (CC)</label>
-            <input id="engine">
-        </div>
-
-        <div class="form-group">
-            <label>Mileage (KM)</label>
-            <input id="mileage">
-        </div>
-
-        <div class="form-group">
-            <label>Fuel Type</label>
-            <select id="fuel">
-                <option>Petrol</option>
-                <option>Diesel</option>
-                <option>Hybrid</option>
-                <option>Electric</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Transmission</label>
-            <select id="transmission">
-                <option>Automatic</option>
-                <option>Manual</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Color</label>
-            <input id="color">
-        </div>
-
-        `;
-    }
-
-    // ================= PROPERTY =================
-
-    else if(category === "property"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Property Type</label>
-            <select id="property_type">
-                <option>Land</option>
-                <option>House</option>
-                <option>Apartment</option>
-                <option>Commercial</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Land Size</label>
-            <input id="size">
-        </div>
-
-        <div class="form-group">
-            <label>Bedrooms</label>
-            <input id="bedrooms" type="number">
-        </div>
-
-        <div class="form-group">
-            <label>Bathrooms</label>
-            <input id="bathrooms" type="number">
-        </div>
-
-        <div class="form-group">
-            <label>Title Deed</label>
-            <select id="title_deed">
-                <option>Yes</option>
-                <option>No</option>
-            </select>
-        </div>
-
-        `;
-    }
-
-    // ================= ELECTRONICS =================
-
-    else if(category === "electronics"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Brand</label>
-            <input id="brand">
-        </div>
-
-        <div class="form-group">
-            <label>Model</label>
-            <input id="model">
-        </div>
-
-        <div class="form-group">
-            <label>Condition</label>
-            <select id="condition">
-                <option>Brand New</option>
-                <option>Used</option>
-                <option>Refurbished</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Warranty</label>
-            <input id="warranty">
-        </div>
-
-        `;
-    }
-
-    // ================= FASHION =================
-
-    else if(category === "fashion"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Size</label>
-            <input id="size">
-        </div>
-
-        <div class="form-group">
-            <label>Color</label>
-            <input id="color">
-        </div>
-
-        <div class="form-group">
-            <label>Condition</label>
-            <select id="condition">
-                <option>New</option>
-                <option>Used</option>
-            </select>
-        </div>
-
-        `;
-    }
-
-    // ================= HOME =================
-
-    else if(category === "home"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Material</label>
-            <input id="material">
-        </div>
-
-        <div class="form-group">
-            <label>Condition</label>
-            <select id="condition">
-                <option>New</option>
-                <option>Used</option>
-            </select>
-        </div>
-
-        `;
-    }
-
-    // ================= SERVICES =================
-
-    else if(category === "services"){
-
-        html += `
-
-        <div class="form-group">
-            <label>Service Type</label>
-            <input id="service_type">
-        </div>
-
-        <div class="form-group">
-            <label>Years of Experience</label>
-            <input id="experience">
-        </div>
-
-        <div class="form-group">
-            <label>Availability</label>
-            <input id="availability" placeholder="Weekdays, Weekends etc">
-        </div>
-
-        `;
-    }
-
-    // ================= OTHERS =================
-
-    else{
-
-        html += `
-
-        <div class="form-group">
-            <label>Quantity</label>
-            <input id="quantity">
-        </div>
-
-        `;
-    }
-
-    // ===== COMMON BOTTOM FIELDS =====
-
     html += `
-
         <div class="form-group">
             <label>Location *</label>
-            <input id="location" required>
+            <input id="location">
         </div>
 
         <div class="form-group">
@@ -669,71 +396,141 @@ function selectCategory(category, element){
         </div>
 
         <div class="form-group">
-            <label>WhatsApp Number</label>
+            <label>WhatsApp</label>
             <input id="whatsapp">
         </div>
 
         <div class="form-group">
-            <label>Product Image</label>
-            <input id="imageFile" type="file" accept="image/*">
+            <label>Images (max 7)</label>
+
+            <input type="file" id="images" accept="image/*" multiple>
+
+            <p id="imageCount">0 / 7 selected</p>
+
+            <div id="imagePreview"></div>
         </div>
-
     `;
-html = `
-<button
-onclick="backCategories()"
-style="
-margin-bottom:20px;
-background:#eee;
-color:#333;
-">
-← Back to Categories
-</button>
 
-<h2 style="margin-bottom:20px;text-align:center;">
-${category.toUpperCase()}
-</h2>
-
-` + html;
     container.innerHTML = html;
 }
-function backCategories(){
 
-    document.getElementById("dynamicForm").innerHTML="";
+/* ================= IMAGE FIX (IMPORTANT) ================= */
+document.addEventListener("change", function (e) {
 
-    document.getElementById("categorySection").style.display="block";
+    if (e.target && e.target.id === "images") {
 
-    document.getElementById("category").value="";
+        const files = Array.from(e.target.files);
+
+        files.forEach(file => {
+            if (selectedImages.length < 7) {
+                selectedImages.push(file);
+            }
+        });
+
+        renderImages();
+    }
+});
+
+/* ================= IMAGE PREVIEW ================= */
+function renderImages() {
+
+    const preview = document.getElementById("imagePreview");
+    const counter = document.getElementById("imageCount");
+
+    preview.innerHTML = "";
+
+    counter.innerText = `${selectedImages.length} / 7 selected`;
+
+    selectedImages.forEach((file, i) => {
+
+        const div = document.createElement("div");
+
+        const img = document.createElement("img");
+        img.style.width = "90px";
+        img.style.height = "90px";
+        img.style.objectFit = "cover";
+
+        const label = document.createElement("div");
+        label.innerText = `${i + 1}. ${file.name}`;
+
+        const reader = new FileReader();
+        reader.onload = e => img.src = e.target.result;
+        reader.readAsDataURL(file);
+
+        div.appendChild(img);
+        div.appendChild(label);
+
+        preview.appendChild(div);
+    });
 }
-async function addProduct() {
-    alert("The Post button is working!");
-}
-async function addProduct() {
-    const btn = document.getElementById("postBtn");
+function showMsg(text, type) {
     const msg = document.getElementById("msg");
 
+    if (!msg) {
+        console.error("Message box (#msg) not found");
+        return;
+    }
+
+    msg.style.display = "block";
+    msg.className = "msg " + type;
+    msg.innerText = text;
+}function clearMsg() {
+    const msg = document.getElementById("msg");
+
+    if (!msg) return;
+
+    msg.style.display = "none";
+    msg.className = "msg";
+    msg.innerText = "";
+}
+function cleanWhatsAppNumber(raw) {
+
+    if (!raw) return null;
+
+    let value = raw.trim();
+
+    // remove all non-digits except +
+    value = value.replace(/[^\d+]/g, "");
+
+    // convert 0xxxxxxxxx → 254xxxxxxxxx
+    if (value.startsWith("0")) {
+        value = "254" + value.slice(1);
+    }
+
+    // remove +
+    if (value.startsWith("+")) {
+        value = value.substring(1);
+    }
+
+    return value;
+}async function addProduct() {
+
+    const btn = document.getElementById("postBtn");
+
     try {
+
         btn.disabled = true;
         btn.innerText = "Posting...";
 
         clearMsg();
 
-        const user = getCurrentUser();
+        // ================= USER =================
+        const user = currentUser;
+
         if (!user) {
-            showMsg("Session expired. Please login again.", "error");
+            alert("Session expired. Please login again.");
             window.location.href = "index.html";
             return;
         }
 
-        // ===== GET BASIC FIELDS (from dynamic form) =====
-        const category = document.getElementById("category").value;
+        // ================= FORM VALUES =================
+        const category = document.getElementById("category")?.value;
         const name = document.getElementById("name")?.value;
         const price = document.getElementById("price")?.value;
         const location = document.getElementById("location")?.value;
-        const description = document.getElementById("description")?.value;
+        const description = document.getElementById("description")?.value || "";
         const whatsapp = cleanWhatsAppNumber(document.getElementById("whatsapp")?.value);
 
-        // ===== VALIDATION =====
         if (!category || !name || !price || !location) {
             showMsg("Please fill all required fields (*)", "error");
             btn.disabled = false;
@@ -741,17 +538,27 @@ async function addProduct() {
             return;
         }
 
-       // ===== IMAGE UPLOAD (OPTIONAL) =====
-let image_url = null;
-const fileInput = document.getElementById("imageFile");
+        // ================= MULTI IMAGE FIX =================
+       // ================= MULTI IMAGE FIX =================
+let image_urls = [];
 
-if (fileInput && fileInput.files.length > 0) {
-    const file = fileInput.files[0];
-    const fileName = `${Date.now()}-${file.name}`;
+// Use ALL selected images, not just the current file input
+const files = selectedImages;
 
-    const { data: uploadData, error: uploadError } = await sb
-        .storage
-        .from("product-images")   // ✅ FIXED BUCKET NAME
+if (files.length > 7) {
+    showMsg("Maximum 7 images allowed", "error");
+    btn.disabled = false;
+    btn.innerText = "Post Product";
+    return;
+}
+
+for (const file of files) {
+
+    const ext = file.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } = await sb.storage
+        .from("product-images")
         .upload(fileName, file);
 
     if (uploadError) {
@@ -763,47 +570,54 @@ if (fileInput && fileInput.files.length > 0) {
     }
 
     const { data } = sb.storage
-        .from("product-images")   // ✅ FIXED HERE TOO
+        .from("product-images")
         .getPublicUrl(fileName);
 
-    image_url = data.publicUrl;
+    image_urls.push(data.publicUrl);
 }
+        // ================= SAVE PRODUCT =================
+       const { error: insertError } = await sb
+    .from("products")
+    .insert([{
+        user_id: user.id,
+        seller_name: user.full_name || "Farmer",
+        category,
+        name,
+        price,
+        location,
+        description,
+        whatsapp_number: whatsapp,
+        image_urls,
+        created_at: new Date().toISOString()
+    }]);
 
-        // ===== BUILD PRODUCT DATA =====
-        const productData = {
-            user_id: user.id,
-            seller_name: user.full_name || "Farmer",
-            whatsapp_number: whatsapp,
-            category,
-            name,
-            price,
-            location,
-            description,
-            image_url,
-            created_at: new Date()
-        };
-
-        // ===== INSERT INTO SUPABASE =====
-        const { error } = await sb
-            .from("products")
-            .insert([productData]);
-
-        if (error) {
-            console.error(error);
+        if (insertError) {
+            console.error(insertError);
             showMsg("Failed to post product", "error");
-        } else {
-            showMsg("Product posted successfully!", "success");
-
-document.getElementById("dynamicForm").innerHTML = "";
-
-setTimeout(() => {
-    window.location.href = "farmerdashboard.html";
-}, 1200);
-            // reset form
-            document.getElementById("dynamicForm").innerHTML = "";
-            document.getElementById("categorySection").style.display = "block";
-            document.getElementById("category").value = "";
+            return;
         }
+
+        // ================= SUCCESS =================
+        showMsg("Product posted successfully!", "success");
+
+        // RESET CLEANLY (IMPORTANT FIX)
+        selectedImages = [];
+
+const fileInput = document.getElementById("images");
+if (fileInput) fileInput.value = "";
+
+        const preview = document.getElementById("imagePreview");
+        if (preview) preview.innerHTML = "";
+
+        const counter = document.getElementById("imageCount");
+        if (counter) counter.innerText = "0 / 7 selected";
+
+        document.getElementById("dynamicForm").innerHTML = "";
+
+        // redirect FIXED
+        setTimeout(() => {
+            window.location.href = "farmerdashboard.html";
+        }, 1200);
 
     } catch (err) {
         console.error(err);

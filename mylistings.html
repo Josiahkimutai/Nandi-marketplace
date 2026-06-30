@@ -156,12 +156,11 @@ if(!user){
 
 async function loadMyListings(){
 
-  const { data, error } = await sb
-    .from("products")
-    .select("*")
-    .eq("seller_name", user.full_name)
-    .order("created_at", { ascending:false });
-
+ const { data, error } = await sb
+.from("products")
+.select("*")
+.eq("user_id", user.id)
+.order("created_at", { ascending: false });
   const box = document.getElementById("listings");
 
   if(error){
@@ -192,7 +191,7 @@ async function loadMyListings(){
         </div>
       </div>
 
-      <img class="img" src="${p.image_url || ''}">
+      <img class="img" src="${p.image_urls?.[0] || p.image_url || ''}">
 
       <div class="body">
         <div class="price">KES ${p.price}</div>
@@ -214,17 +213,25 @@ async function loadMyListings(){
 /* MARK AS SOLD */
 async function markSold(id){
 
-  const { error } = await sb
-    .from("products")
-    .update({ sold:true })
-    .eq("id", id);
+    console.log("Updating product:", id);
 
-  if(error){
-    alert("Failed to update");
-    return;
-  }
+    const { data, error } = await sb
+        .from("products")
+        .update({ sold: true })
+        .eq("id", id)
+        .select();
 
-  loadMyListings();
+    console.log("Updated:", data);
+    console.log("Error:", error);
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    alert("Product marked as sold.");
+
+    loadMyListings();
 }
 
 loadMyListings();

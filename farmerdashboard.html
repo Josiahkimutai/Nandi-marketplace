@@ -15,6 +15,7 @@ body{
   background:#eef2f5;
   padding-bottom:90px;
   color:#1f2937;
+  
 }
 
 /* TOP BAR (SQUEEZED) */
@@ -377,54 +378,68 @@ body{
 /* PRODUCT IMAGE */
 /* PRODUCT IMAGE */
 
+/* IMAGE GALLERY */
+
 .img-box{
-    width:100%;
-    height:260px;
-    background:#f5f5f5;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
     position:relative;
+
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:4px;
+
+    background:#f5f5f5;
+    padding:4px;
 }
 
 .img-box img{
-    width:150%;
-    height:100%;
-    object-fit:contain;
-    object-position:center;
-    transition:.3s ease;
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    border-radius:8px;
+    display:block;
 }
 
-.img-box img:hover{
-    transform:scale(1.03);
+/* 1 image */
+.img-box img:only-child{
+    grid-column:1 / span 2;
+    height:320px;
 }
 
-/* SOLD BADGE */
+/* 2 images */
+.img-box img:nth-child(1):nth-last-child(2),
+.img-box img:nth-child(2):nth-last-child(1){
+    height:220px;
+}
 
+/* 3 images */
+.img-box img:first-child:nth-last-child(3){
+    grid-column:1 / span 2;
+    height:240px;
+}
+
+.img-box img:first-child:nth-last-child(3) ~ img{
+    height:150px;
+}
+
+/* SOLD overlay */
 .sold-overlay{
     position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
+    inset:0;
 
-    width:120px;
-    height:60px;
-
-    background:rgba(40,40,40,.85);
-
-    border-radius:12px;
+    background:rgba(0,0,0,.45);
 
     display:flex;
-    align-items:center;
     justify-content:center;
+    align-items:center;
 
     color:#fff;
-    font-size:22px;
+    font-size:34px;
     font-weight:900;
-    letter-spacing:1px;
 
-    box-shadow:0 6px 18px rgba(0,0,0,.35);
+    letter-spacing:2px;
+
+    z-index:20;
+
 }
 .post-body{
     padding:8px 10px;
@@ -878,6 +893,7 @@ if (!user) window.location.href = "index.html";
 ========================= */
 
 let allProducts = [];
+console.log(allProducts);
 
 /* =========================
    LOAD USER PROFILE
@@ -982,10 +998,15 @@ function updateVerificationUI(status) {
    FEED
 ========================= */
 async function loadFeed() {
-  const { data } = await sb
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
+const { data, error } = await sb
+  .from("products")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+console.log("Feed data:", data);
+console.log("Feed error:", error);
+
+console.log(data);
 
   allProducts = data || [];
   updateStats(allProducts);
@@ -1125,39 +1146,76 @@ function renderFeed(data) {
     const hasWhatsApp = whatsappNumber.length > 0;
 
     const div = document.createElement("div");
+let gallery = "";
 
-    div.innerHTML = `
-      <div class="post">
+// Collect all available images
+let images = [];
 
-        <!-- HEADER -->
-        <div class="post-header">
-          <div class="post-left">
-            <img src="https://i.pravatar.cc/100?u=${sellerName}">
-            
-            <b>${sellerName}</b>
+if (Array.isArray(p.image_urls) && p.image_urls.length > 0) {
+    images = p.image_urls.filter(url => url && url.trim() !== "");
+} else if (p.image_url && p.image_url.trim() !== "") {
+    images = [p.image_url];
+}
 
-            <!-- VERIFIED BADGE -->
-            ${p.seller_verified ? `
-              <span style="
-                margin-left:6px;
-                color:#16a34a;
-                font-size:11px;
-                font-weight:900;
-                display:flex;
-                align-items:center;
-                gap:4px;
-              ">
-                ✔ Verified
-              </span>
-            ` : ""}
-          </div>
-        </div>
+// Build gallery
+gallery = images.map(url => `
+    <img
+        src="${url}"
+        loading="lazy"
+        alt="${p.name}"
+        onclick="openImageViewer('${url}')"
+        style="cursor:pointer;"
+    >
+`).join("");
 
-        <!-- IMAGE -->
-        <div class="img-box">
-          <img src="${p.image_url}">
-          ${p.sold ? `<div class="sold-overlay">SOLD</div>` : ""}
-        </div>
+// Fallback if no image exists
+if (gallery === "") {
+    gallery = `
+        <img src="https://placehold.co/600x400?text=No+Image"
+             loading="lazy"
+             alt="No Image">
+    `;
+}
+
+div.innerHTML = `
+<div class="post">
+
+   <!-- HEADER -->
+<div class="post-header">
+  <div class="post-left">
+
+    <img src="https://i.pravatar.cc/100?u=${sellerName}">
+
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+
+      <b>${sellerName}</b>
+
+      <span style="
+        background:${verifiedUsers[p.user_id] ? '#dc2626 ' : '#16a34a'};
+        color:white;
+        padding:4px 10px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:700;
+        display:inline-flex;
+        align-items:center;
+        gap:4px;
+      ">
+        ${verifiedUsers[p.user_id] ? ' ✖NotVerified' : ' ✔Verified'}
+      </span>
+
+    </div>
+
+  </div>
+</div>
+
+    <!-- IMAGE -->
+    <div class="img-box">
+        ${gallery}
+        ${p.sold ? `<div class="sold-overlay">SOLD</div>` : ""}
+    </div>
+
+</div>
 
         <!-- BODY -->
         <div class="post-body">
@@ -1176,10 +1234,11 @@ function renderFeed(data) {
           <button class="small-btn message-btn-post">
             Message
           </button>
-
-          <button class="small-btn" onclick="toggleLike('${p.id}')">
-            ❤️ <span id="like-${p.id}">${p.likes || 0}</span>
-          </button>
+<button class="small-btn like-btn" data-id="${p.id}">
+  ❤️ <span id="like-${p.id}">${p.likes || 0}</span>
+</button>
+            
+      
 
         </div>
 
@@ -1187,6 +1246,9 @@ function renderFeed(data) {
     `;
 
     feed.appendChild(div);
+    div.querySelector(".like-btn").addEventListener("click", () => {
+  toggleLike(p.id);
+});
 
     // ======================
     // WHATSAPP CLICK
@@ -1237,6 +1299,12 @@ function logout() {
   localStorage.removeItem("agrihub_user");
   window.location.href = "index.html";
 }
+function logout() {
+  localStorage.removeItem("agrihub_user");
+  window.location.href = "index.html";
+}
+
+
 /* =========================
    OPEN CHAT
 ========================= */
@@ -1306,19 +1374,7 @@ async function openChat(otherUserId, otherUserName) {
 /* =========================
    INIT
 ========================= */
-(async () => {
 
-    await loadUser();
-
-    await loadVerification();
-
-    await loadVerifiedUsers();
-
-    await loadFeed();
-
-    await loadUnreadMessages();
-
-})();
 async function loadUnreadMessages() {
   try {
     const { data: conversations } = await sb
@@ -1405,6 +1461,45 @@ window.addEventListener("scroll", function () {
 function closeVerifyPopup() {
   document.getElementById("verifyPopup").style.display = "none";
 }
+function openImageViewer(src){
+
+    document.getElementById("viewerImage").src = src;
+    document.getElementById("imageViewer").style.display = "flex";
+
+}
+
+function closeImageViewer(){
+
+    document.getElementById("imageViewer").style.display = "none";
+
+}async function toggleLike(productId) {
+  try {
+    console.log("LIKE CLICKED:", productId);
+
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+
+    const newLikes = (product.likes || 0) + 1;
+
+    const { error } = await sb
+      .from("products")
+      .update({ likes: newLikes })
+      .eq("id", productId);
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return;
+    }
+
+    product.likes = newLikes;
+
+    const el = document.getElementById(`like-${productId}`);
+    if (el) el.innerText = newLikes;
+
+  } catch (err) {
+    console.error("Like error:", err);
+  }
+}
 /* =========================
    INIT
 ========================= */
@@ -1471,6 +1566,43 @@ function closeVerifyPopup() {
       Cancel
     </button>
   </div>
+</div><!-- IMAGE VIEWER -->
+<div id="imageViewer" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.95);
+justify-content:center;
+align-items:center;
+z-index:999999;
+">
+
+<img id="viewerImage" style="
+max-width:95%;
+max-height:95%;
+border-radius:12px;
+object-fit:contain;
+">
+
+<button onclick="closeImageViewer()" style="
+position:absolute;
+top:20px;
+right:20px;
+background:#fff;
+border:none;
+width:42px;
+height:42px;
+border-radius:50%;
+font-size:22px;
+cursor:pointer;
+font-weight:bold;
+">
+✕
+</button>
+
 </div>
 </body>
 </html>
