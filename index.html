@@ -1,254 +1,445 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nandi AgriHub | Login</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Nandi Marketplace</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{
-  --green:#1f8f4e;
-  --dark:#16693a;
-  --bg:#f4f7f5;
-  --text:#1f2937;
-}
 
 *{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-  font-family:Arial,sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,Arial,sans-serif;
+}
+
+html,body{
+width:100%;
+height:100%;
+overflow:hidden;
 }
 
 body{
-  background:var(--bg);
-  color:var(--text);
+
+background:
+linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.55)),
+url("background.png");
+
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
 }
 
-/* HEADER */
-header{
-  padding:18px;
-  text-align:center;
-  font-size:24px;
-  font-weight:bold;
-  color:var(--green);
-  background:#fff;
-  box-shadow:0 2px 10px #0001;
+/* GLASS LOGIN CARD */
+
+.login-card{
+
+width:92%;
+max-width:380px;
+
+padding:25px;
+
+border-radius:28px;
+
+background:rgba(255,255,255,.15);
+
+backdrop-filter:blur(16px);
+-webkit-backdrop-filter:blur(16px);
+
+border:1px solid rgba(255,255,255,.25);
+
+box-shadow:
+0 10px 40px rgba(0,0,0,.35);
+
+text-align:center;
+
 }
 
-/* HERO */
-.hero{
-  background:linear-gradient(135deg,var(--green),var(--dark));
-  color:#fff;
-  padding:30px 20px;
-  text-align:center;
+/* LOGO */
+
+.logo{
+
+width:90px;
+height:90px;
+
+margin:auto;
+margin-bottom:12px;
+
+border-radius:22px;
+
+background:white;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+box-shadow:0 6px 18px rgba(0,0,0,.25);
+
+overflow:hidden;
+
 }
 
-.hero h1{
-  font-size:1.8rem;
-  margin-bottom:10px;
+.logo img{
+
+width:100%;
+height:100%;
+object-fit:cover;
+
 }
 
-.hero p{
-  font-size:0.95rem;
-  opacity:0.9;
+/* TITLE */
+
+h1{
+
+font-size:30px;
+font-weight:800;
+
+color:white;
+
+margin-bottom:6px;
+
 }
 
-/* LOGIN BOX */
-.container{
-  width:92%;
-  max-width:420px;
-  margin:-25px auto 20px;
-  background:#fff;
-  padding:22px;
-  border-radius:16px;
-  box-shadow:0 10px 25px #0002;
-}
+.subtitle{
 
-h2{
-  margin-bottom:6px;
-}
+color:#f1f5f9;
 
-small{
-  color:#666;
+font-size:14px;
+
+margin-bottom:22px;
+
 }
 
 /* INPUTS */
-label{
-  display:block;
-  margin:14px 0 6px;
-  font-weight:bold;
-  font-size:14px;
+
+.input-group{
+
+margin-bottom:16px;
+
+text-align:left;
+
 }
 
-input{
-  width:100%;
-  padding:13px;
-  border:1px solid #ccc;
-  border-radius:10px;
-  outline:none;
+.input-group label{
+
+display:block;
+
+color:white;
+
+font-size:13px;
+
+margin-bottom:6px;
+
+font-weight:700;
+
 }
 
-input:focus{
-  border-color:var(--green);
+.input-group input{
+
+width:100%;
+
+padding:14px;
+
+border:none;
+
+outline:none;
+
+border-radius:14px;
+
+background:rgba(255,255,255,.90);
+
+font-size:15px;
+
 }
 
 /* BUTTON */
-button{
-  width:100%;
-  margin-top:18px;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:var(--green);
-  color:#fff;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
+
+.login-btn{
+
+width:100%;
+
+padding:15px;
+
+border:none;
+
+border-radius:16px;
+
+background:#1f8f4e;
+
+color:white;
+
+font-size:16px;
+
+font-weight:800;
+
+cursor:pointer;
+
+transition:.3s;
+
 }
 
-/* FEATURES */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:12px;
-  padding:20px;
-  max-width:900px;
-  margin:auto;
+.login-btn:hover{
+
+background:#16693a;
+
+transform:translateY(-2px);
+
 }
 
-.card{
-  background:#fff;
-  padding:18px;
-  border-radius:14px;
-  text-align:center;
-  box-shadow:0 4px 10px #0001;
-  font-size:14px;
+/* REGISTER */
+
+.register{
+
+margin-top:18px;
+
+font-size:14px;
+
+color:white;
+
 }
 
-/* FOOTER */
-footer{
-  text-align:center;
-  padding:25px;
-  font-size:13px;
-  color:#666;
+.register a{
+
+color:#8BFFB6;
+
+font-weight:bold;
+
+text-decoration:none;
+
 }
 
-/* DESKTOP */
-@media(min-width:900px){
-  .hero{
-    border-radius:18px;
-    margin:20px;
-  }
+/* VERSION */
+
+.version{
+
+margin-top:18px;
+
+font-size:11px;
+
+color:#ddd;
+
+line-height:20px;
+
 }
+
 </style>
+
 </head>
 
 <body>
 
-<header>🌾 Nandi AgriHub</header>
+<div class="login-card">
 
-<section class="hero">
-  <h1>Connecting Farmers & Buyers</h1>
-  <p>Buy • Sell • AI Advisor • Loans • Land Listings</p>
-</section>
+<div class="logo">
 
-<div class="container">
-  <h2>Welcome Back</h2>
-  <small>Login with your ID number</small>
+<img src="background (2).png">
 
-  <form id="loginForm">
-    <label>ID Number</label>
-    <input id="idNumber" type="text" placeholder="Enter ID Number">
-
-    <label>Password</label>
-    <input id="password" type="password" placeholder="Enter Password">
-
-    <button type="submit" id="loginBtn">Login</button>
-  </form>
-
-  <p style="text-align:center;margin-top:14px">
-    <a href="register.html">Create Account</a>
-  </p>
-
-  <p id="alertBox" style="text-align:center;margin-top:10px;font-weight:bold;"></p>
 </div>
 
-<section class="grid">
-  <div class="card">🛒 Marketplace</div>
-  <div class="card">🌱 Farm Inputs</div>
-  <div class="card">🤖 AI Advisor</div>
-  <div class="card">💰 Loans</div>
-  <div class="card">🌍 Land</div>
-  <div class="card">🚚 Buyers</div>
-</section>
+<h1>Nandi Marketplace</h1>
 
-<footer>© Nandi AgriHub</footer>
+<div class="subtitle">
 
+Buy • Sell • Services • Jobs • Land • Transport
+
+</div>
+
+<form id="loginForm">
+
+<div class="input-group">
+
+<label>ID Number</label>
+
+<input
+type="text"
+id="idNumber"
+placeholder="Enter ID Number">
+
+</div>
+
+<div class="input-group">
+
+<label>Password</label>
+
+<input
+type="password"
+id="password"
+placeholder="Enter Password">
+
+</div>
+
+<button
+class="login-btn"
+id="loginBtn">
+
+LOGIN
+
+</button>
+
+</form>
+
+<div class="register">
+
+Don't have an account?
+
+<a href="register.html">
+
+Register
+
+</a>
+
+</div>
+
+<div class="version">
+
+Powered by Joskev Developers
+
+<br>
+
+Version 1.0
+
+</div>
+
+</div>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
+    // ==========================
+    // SUPABASE
+    // ==========================
 
-  const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL =
+    "https://wfbepkegbtxszhhozqtz.supabase.co";
 
-  const form = document.getElementById("loginForm");
-  const alertBox = document.getElementById("alertBox");
-  const btn = document.getElementById("loginBtn");
+    const SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
 
-  function show(msg, ok=false){
-    alertBox.style.color = ok ? "green" : "red";
-    alertBox.textContent = msg;
-  }
+    const sb = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    // ==========================
+    // ELEMENTS
+    // ==========================
 
-    const idNumber = document.getElementById("idNumber").value.trim();
-    const password = document.getElementById("password").value;
+    const form = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
 
-    if(!idNumber || !password){
-      show("Fill all fields");
-      return;
+    // create message area automatically
+    const message = document.createElement("div");
+    message.style.marginTop = "15px";
+    message.style.fontWeight = "700";
+    message.style.fontSize = "14px";
+    message.style.textAlign = "center";
+
+    form.appendChild(message);
+
+    function showMessage(text, success=false){
+
+        message.innerHTML = text;
+        message.style.color = success ? "#6CFF8A" : "#ff4d4d";
+
     }
 
-    btn.textContent = "Logging in...";
-    btn.disabled = true;
+    // ==========================
+    // LOGIN
+    // ==========================
 
-    const { data, error } = await client
-      .from("users")
-      .select("*")
-      .eq("id_number", idNumber)
-      .single();
+    form.addEventListener("submit", async function(e){
 
-    if(error || !data){
-      show("Account not found");
-      btn.textContent = "Login";
-      btn.disabled = false;
-      return;
-    }
+        e.preventDefault();
 
-    if(data.password !== password){
-      show("Wrong password");
-      btn.textContent = "Login";
-      btn.disabled = false;
-      return;
-    }
+        const idNumber =
+        document.getElementById("idNumber").value.trim();
 
-    localStorage.setItem("agrihub_user", JSON.stringify(data));
+        const password =
+        document.getElementById("password").value.trim();
 
-    show("Login successful ✔", true);
+        if(idNumber==="" || password===""){
 
-    setTimeout(()=>{
-      window.location.href = "farmerdashboard.html";
-    }, 1000);
-  });
+            showMessage("Please fill in all fields.");
+
+            return;
+
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = "Signing In...";
+
+        try{
+
+            const { data, error } = await sb
+            .from("users")
+            .select("*")
+            .eq("id_number", idNumber)
+            .single();
+
+            if(error || !data){
+
+                showMessage("Account not found.");
+
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = "LOGIN";
+
+                return;
+
+            }
+
+            if(data.password !== password){
+
+                showMessage("Incorrect password.");
+
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = "LOGIN";
+
+                return;
+
+            }
+
+            // SAVE USER
+
+            localStorage.setItem(
+                "agrihub_user",
+                JSON.stringify(data)
+            );
+
+            showMessage("✔ Login Successful", true);
+
+            setTimeout(()=>{
+
+                window.location.href =
+                "farmerdashboard.html";
+
+            },1000);
+
+        }
+
+        catch(err){
+
+            console.error(err);
+
+            showMessage("Something went wrong.");
+
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = "LOGIN";
+
+        }
+
+    });
 
 });
 </script>
-
 </body>
 </html>
