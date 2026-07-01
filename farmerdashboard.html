@@ -887,7 +887,34 @@ const sb = supabase.createClient(
 
 const user = JSON.parse(localStorage.getItem("agrihub_user"));
 if (!user) window.location.href = "index.html";
+let buyerLatitude = null;
+let buyerLongitude = null;
+async function getBuyerLocation() {
 
+    return new Promise((resolve, reject) => {
+
+        navigator.geolocation.getCurrentPosition(
+
+            position => {
+
+                buyerLatitude = position.coords.latitude;
+                buyerLongitude = position.coords.longitude;
+
+                resolve();
+
+            },
+
+            error => reject(error),
+
+            {
+                enableHighAccuracy: true
+            }
+
+        );
+
+    });
+
+}
 /* =========================
    STATE
 ========================= */
@@ -1128,7 +1155,24 @@ async function loadVerifiedUsers() {
     });
 
 }
+function calculateDistance(lat1, lon1, lat2, lon2) {
 
+    const R = 6371;
+
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2) *
+        Math.sin(dLon/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
 /* =========================
 /* =========================
    RENDER FEED (FIXED)
@@ -1176,7 +1220,25 @@ if (gallery === "") {
              alt="No Image">
     `;
 }
+let distanceText = "";
 
+if (
+    buyerLatitude !== null &&
+    buyerLongitude !== null &&
+    p.latitude !== null &&
+    p.longitude !== null
+) {
+
+    const distance = calculateDistance(
+        buyerLatitude,
+        buyerLongitude,
+        p.latitude,
+        p.longitude
+    );
+
+    distanceText = `${distance.toFixed(1)} km away`;
+
+}
 div.innerHTML = `
 <div class="post">
 
@@ -1191,7 +1253,7 @@ div.innerHTML = `
       <b>${sellerName}</b>
 
       <span style="
-        background:${verifiedUsers[p.user_id] ? '#dc2626 ' : '#16a34a'};
+        background:${verifiedUsers[p.user_id] ? '#dc2626' : '#16a34a'};
         color:white;
         padding:4px 10px;
         border-radius:999px;
@@ -1221,7 +1283,17 @@ div.innerHTML = `
         <div class="post-body">
           <h3>${p.name}</h3>
           <div class="price">KES ${p.price}</div>
-          <div class="time">🕒 ${formatTimeAgo(p.created_at)}</div>
+          <div class="time">
+🕒 ${formatTimeAgo(p.created_at)}
+</div>
+
+<div style="
+margin-top:6px;
+font-weight:bold;
+color:#1f8f4e;
+">
+📏 ${distanceText}
+</div>
         </div>
 
         <!-- ACTIONS -->
@@ -1510,6 +1582,12 @@ function closeImageViewer(){
     await loadVerification();
 
     await loadVerifiedUsers();
+
+    try {
+        await getBuyerLocation();
+    } catch (e) {
+        console.log("Location permission denied.");
+    }
 
     await loadFeed();
 

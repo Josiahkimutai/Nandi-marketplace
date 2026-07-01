@@ -489,20 +489,53 @@ function cleanWhatsAppNumber(raw) {
 
     let value = raw.trim();
 
-    // remove all non-digits except +
     value = value.replace(/[^\d+]/g, "");
 
-    // convert 0xxxxxxxxx → 254xxxxxxxxx
     if (value.startsWith("0")) {
         value = "254" + value.slice(1);
     }
 
-    // remove +
     if (value.startsWith("+")) {
         value = value.substring(1);
     }
+/* ================= GPS LOCATION ================= */
 
+function getCurrentLocation() {
+
+    return new Promise((resolve, reject) => {
+
+        if (!navigator.geolocation) {
+            reject("Geolocation not supported");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            position => {
+
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+
+            },
+
+            error => reject(error),
+
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+
+        );
+
+    });
+
+}
     return value;
+    /* ================= GPS LOCATION ================= */
+
 }async function addProduct() {
 
     const btn = document.getElementById("postBtn");
@@ -536,7 +569,54 @@ function cleanWhatsAppNumber(raw) {
             btn.disabled = false;
             btn.innerText = "Post Product";
             return;
-        }
+        }// ================= GET GPS LOCATION =================
+let latitude = null;
+let longitude = null;
+
+try {
+
+    const gps = await getCurrentLocation();
+
+    latitude = gps.latitude;
+    longitude = gps.longitude;
+
+    console.log("Latitude:", latitude);
+    console.log("Longitude:", longitude);
+
+} catch (error) {
+
+    console.error(error);
+
+    showMsg("Please allow location access to post your product.", "error");
+
+    btn.disabled = false;
+    btn.innerText = "Post Product";
+
+    return;
+}function getCurrentLocation() {
+    return new Promise((resolve, reject) => {
+
+        navigator.geolocation.getCurrentPosition(
+
+            position => {
+
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+
+            },
+
+            error => reject(error),
+
+            {
+                enableHighAccuracy: true
+            }
+
+        );
+
+    });
+}
 
         // ================= MULTI IMAGE FIX =================
        // ================= MULTI IMAGE FIX =================
@@ -576,21 +656,24 @@ for (const file of files) {
     image_urls.push(data.publicUrl);
 }
         // ================= SAVE PRODUCT =================
-       const { error: insertError } = await sb
-    .from("products")
-    .insert([{
-        user_id: user.id,
-        seller_name: user.full_name || "Farmer",
-        category,
-        name,
-        price,
-        location,
-        description,
-        whatsapp_number: whatsapp,
-        image_urls,
-        created_at: new Date().toISOString()
-    }]);
+  const { error: insertError } = await sb
+.from("products")
+.insert([{
+    user_id: user.id,
+    seller_name: user.full_name || "Farmer",
+    category,
+    name,
+    price,
+    location,
+    description,
+    whatsapp_number: whatsapp,
+    image_urls,
 
+    latitude,
+    longitude,
+
+    created_at: new Date().toISOString()
+}]);
         if (insertError) {
             console.error(insertError);
             showMsg("Failed to post product", "error");

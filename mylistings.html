@@ -34,60 +34,70 @@ body{
 
 /* CONTAINER */
 .container{
-  max-width:900px;
+  max-width:1000px;
   margin:20px auto;
   padding:10px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+
 }
 
 /* CARD */
 .card{
   background:white;
-  border-radius:14px;
-  margin-bottom:14px;
+  border-radius:12px;
   overflow:hidden;
-  box-shadow:0 2px 10px rgba(0,0,0,0.05);
-  border:1px solid #e4e6eb;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  border:1px solid #e5e7eb;
 }
 
 /* HEADER */
 .top{
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:12px;
+  gap:8px;
+  padding:8px;
 }
 
 .avatar{
-  width:40px;
-  height:40px;
+  width:32px;
+  height:32px;
   border-radius:50%;
 }
 
 .name{
+  font-size:14px;
   font-weight:800;
 }
 
 .time{
-  font-size:12px;
+  font-size:11px;
   color:#666;
 }
 
 /* IMAGE */
 .img{
   width:100%;
-  height:280px;
+  height:140px;
   object-fit:cover;
   background:#f5f5f5;
 }
 
 /* BODY */
 .body{
-  padding:12px;
+  padding:8px;
 }
 
 .price{
-  color:#1f8f4e;
+  font-size:16px;
   font-weight:900;
+  color:#1f8f4e;
+}
+
+.body p{
+  margin:4px 0;
+  font-size:13px;
 }
 
 /* SOLD BADGE */
@@ -105,9 +115,9 @@ body{
 /* BUTTON */
 .btn{
   width:100%;
-  padding:12px;
+  padding:10px;
   border:none;
-  font-weight:800;
+  font-weight:700;
   cursor:pointer;
   background:#1f8f4e;
   color:white;
