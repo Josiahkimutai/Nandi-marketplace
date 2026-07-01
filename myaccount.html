@@ -1,232 +1,1538 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>My Account - AgriHub</title>
+<title>My Account | AgriHub</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
 
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:system-ui,-apple-system,sans-serif;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:system-ui,-apple-system,sans-serif;
 }
 
 body{
-    background:#eef2f5;
-    min-height:100vh;
-    padding-bottom:100px;
+
+background:#eef2f5;
+
+color:#222;
+
+padding-bottom:100px;
+
 }
 
-/* Header */
+/*=========================
+HEADER
+=========================*/
 
 .header{
-    background:linear-gradient(135deg,#1f8f4e,#28a95c);
-    color:white;
-    text-align:center;
-    padding:30px 20px 35px;
-    border-bottom-left-radius:30px;
-    border-bottom-right-radius:30px;
-    box-shadow:0 5px 20px rgba(0,0,0,.15);
+
+background:linear-gradient(135deg,#1f8f4e,#25b15f);
+
+padding:35px 20px;
+
+text-align:center;
+
+border-bottom-left-radius:35px;
+border-bottom-right-radius:35px;
+
+color:white;
+
+box-shadow:0 10px 30px rgba(0,0,0,.18);
+
 }
 
 .avatar{
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    border:4px solid white;
-    object-fit:cover;
+
+width:110px;
+height:110px;
+
+border-radius:50%;
+
+border:5px solid white;
+
+object-fit:cover;
+
+box-shadow:0 8px 25px rgba(0,0,0,.25);
+
 }
 
-.name{
-    margin-top:12px;
-    font-size:21px;
-    font-weight:800;
+.header h2{
+
+margin-top:15px;
+
+font-size:26px;
+
+font-weight:800;
+
 }
 
 .status{
-    display:inline-block;
-    margin-top:10px;
-    padding:7px 18px;
-    border-radius:50px;
-    background:white;
-    color:#1f8f4e;
-    font-size:13px;
-    font-weight:800;
+
+display:inline-block;
+
+margin-top:12px;
+
+padding:8px 18px;
+
+border-radius:999px;
+
+background:white;
+
+font-size:13px;
+
+font-weight:800;
+
+color:#16a34a;
+
 }
 
-/* Cards */
+.member{
+
+margin-top:10px;
+
+font-size:13px;
+
+opacity:.9;
+
+}
+
+/*=========================
+CONTAINER
+=========================*/
 
 .container{
-    padding:18px;
+
+padding:18px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:16px;
+
 }
+
+/*=========================
+CARD
+=========================*/
 
 .card{
-    width:100%;
-    background:white;
-    border-radius:18px;
-    padding:16px;
-    margin-bottom:14px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    box-shadow:0 3px 12px rgba(0,0,0,.08);
+
+background:white;
+
+border-radius:22px;
+
+padding:18px;
+
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+animation:fade .4s ease;
+
 }
 
-.left{
-    display:flex;
-    align-items:center;
-    gap:15px;
+@keyframes fade{
+
+from{
+
+opacity:0;
+
+transform:translateY(12px);
+
 }
 
-.icon{
-    width:50px;
-    height:50px;
-    border-radius:15px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:white;
-    font-size:20px;
+to{
+
+opacity:1;
+
+transform:none;
+
 }
 
-.profile{
-    background:#16a34a;
 }
 
-.info{
-    background:#2563eb;
+/*=========================
+TITLE
+=========================*/
+
+.card-title{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+font-size:18px;
+
+font-weight:800;
+
+color:#1f8f4e;
+
+margin-bottom:20px;
+
 }
 
-.verify{
-    background:#f59e0b;
+.card-title i{
+
+font-size:22px;
+
+}
+
+/*=========================
+INFO ROW
+=========================*/
+
+.info-row{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:12px 0;
+
+border-bottom:1px solid #ececec;
+
+font-size:15px;
+
+}
+
+.info-row:last-child{
+
+border:none;
+
+}
+
+.info-row span{
+
+color:#6b7280;
+
+}
+
+.info-row b{
+
+color:#111827;
+
+}
+
+/*=========================
+BUTTONS
+=========================*/
+
+button{
+
+width:100%;
+
+margin-top:18px;
+
+border:none;
+
+border-radius:14px;
+
+padding:14px;
+
+font-size:15px;
+
+font-weight:800;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+button:hover{
+
+transform:translateY(-2px);
+
+}
+
+.primary{
+
+background:#1f8f4e;
+
+color:white;
+
+}
+
+.primary:hover{
+
+background:#15753d;
+
 }
 
 .logout{
-    background:#ef4444;
+
+background:#ef4444;
+
+color:white;
+
 }
 
-.text h3{
-    font-size:16px;
+.logout:hover{
+
+background:#dc2626;
+
+}
+
+/*=========================
+STATS GRID
+=========================*/
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+    margin-top:10px;
+}
+
+/* CARD */
+.stat-card{
+    background:linear-gradient(145deg,#ffffff,#f7faf9);
+    border:1px solid #e6ece8;
+    border-radius:18px;
+    padding:18px;
+    text-align:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.06);
+    transition:0.25s ease;
+    position:relative;
+    overflow:hidden;
+}
+
+/* hover effect */
+.stat-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 25px rgba(0,0,0,0.10);
+}
+
+/* icon circle */
+.stat-icon{
+    font-size:22px;
+    width:45px;
+    height:45px;
+    margin:0 auto 10px auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#e8f7ee;
+    color:#16a34a;
+    border-radius:50%;
+}
+
+/* BIG NUMBER */
+.stat-card h2{
+    font-size:26px;
+    font-weight:900;
+    color:#111827;
+    margin-bottom:5px;
+}
+
+/* LABEL */
+.stat-card p{
+    font-size:12px;
     font-weight:700;
-    margin-bottom:3px;
-}
-
-.text p{
-    font-size:13px;
     color:#6b7280;
+    letter-spacing:0.3px;
 }
 
-.arrow{
-    color:#9ca3af;
-    font-size:18px;
+/* nice green accent line */
+.stat-card::after{
+    content:"";
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:3px;
+    background:linear-gradient(90deg,#16a34a,#22c55e);
+}
+/*=========================
+MENU
+=========================*/
+
+.menu{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.menu-item{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:16px 0;
+
+border-bottom:1px solid #ececec;
+
+cursor:pointer;
+
+transition:.25s;
+
+}
+
+.menu-item:last-child{
+
+border-bottom:none;
+
+}
+
+.menu-item:hover{
+
+padding-left:8px;
+
+color:#16a34a;
+
+}
+
+.menu-item div{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+font-weight:700;
+
+}
+
+.menu-item i:first-child{
+
+width:22px;
+
+color:#16a34a;
+
+}
+
+/*=========================
+SUBSCRIPTION
+=========================*/
+
+.plan{
+
+background:linear-gradient(135deg,#16a34a,#0f7d39);
+
+color:white;
+
+padding:22px;
+
+border-radius:20px;
+
+}
+
+.plan h3{
+
+font-size:23px;
+
+margin-bottom:10px;
+
+}
+
+.plan p{
+
+opacity:.95;
+
+margin-bottom:6px;
+
+}
+
+/*=========================
+FOOTER
+=========================*/
+
+.footer{
+
+text-align:center;
+
+padding:30px;
+
+font-size:13px;
+
+color:#888;
+
+}
+
+/*=========================
+RESPONSIVE
+=========================*/
+
+@media(max-width:650px){
+
+.header{
+
+padding:30px 15px;
+
+}
+
+.avatar{
+
+width:90px;
+height:90px;
+
+}
+
+.header h2{
+
+font-size:22px;
+
+}
+
+.stats-grid{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+.card{
+
+padding:16px;
+
+}
+
 }
 
 </style>
+
 </head>
 
 <body>
+    <!-- ==========================
+HEADER
+========================== -->
 
 <div class="header">
 
-<img src="https://i.pravatar.cc/200" class="avatar">
+    <img
+        id="avatar"
+        class="avatar"
+        src="https://i.pravatar.cc/250"
+    >
 
-<div class="name">Josiah Kimutai</div>
+    <h2 id="fullName">
+        Loading...
+    </h2>
 
-<div class="status">
-Not Verified
+    <div
+        id="verifyStatus"
+        class="status">
+        Loading...
+    </div>
+
+    <div
+        class="member"
+        id="memberSince">
+
+        Member since...
+
+    </div>
+
 </div>
 
-</div>
+<!-- ==========================
+CONTENT
+========================== -->
+
+<div class="container">
+
+<!-- ==========================
+PERSONAL INFORMATION
+========================== -->
 
 <div class="card">
 
-<div class="left">
+<div class="card-title">
 
-<div class="icon profile">
 <i class="fa fa-user"></i>
-</div>
 
-<div class="text">
-<h3>My Profile</h3>
-<p>Edit your profile details</p>
-</div>
+Personal Information
 
 </div>
 
-<div class="arrow">
-<i class="fa fa-chevron-right"></i>
+<div class="info-row">
+
+<span>Full Name</span>
+
+<b id="profileName">
+Loading...
+</b>
+
+</div>
+
+<div class="info-row">
+
+<span>Phone Number</span>
+
+<b id="profilePhone">
+Loading...
+</b>
+
+</div>
+
+<div class="info-row">
+
+<span>ID Number</span>
+
+<b id="profileID">
+Loading...
+</b>
+
+</div>
+
+<div class="info-row">
+
+<span>County</span>
+
+<b id="profileCounty">
+Loading...
+</b>
+
+</div>
+
+<div class="info-row">
+
+<span>Sub County</span>
+
+<b id="profileSubCounty">
+Loading...
+</b>
+
+</div>
+
+<div class="info-row">
+
+<span>Shopping Centre</span>
+
+<b id="profileCentre">
+Loading...
+</b>
+
+</div>
+
+<button
+class="primary"
+id="editProfile">
+
+<i class="fa fa-user-pen"></i>
+
+Edit Profile
+
+</button>
+
+</div>
+
+<!-- ==========================
+STATISTICS
+========================== -->
+<!-- =========================
+     STATISTICS
+========================= -->
+
+<div class="section-title">
+    My Statistics
+</div>
+
+<div class="stats-grid">
+
+    <!-- Total Worth -->
+    <div class="stat-card">
+    <div class="stat-icon">💰</div>
+    <h2 id="totalWorth">KES 0</h2>
+    <p>Total Worth</p>
+</div>
+
+<div class="stat-card">
+    <div class="stat-icon">📦</div>
+    <h2 id="soldItems">0</h2>
+    <p>Items Sold</p>
 </div>
 
 </div>
+<!-- ==========================
+SUBSCRIPTION
+========================== -->
 
 <div class="card">
 
-<div class="left">
+<div class="card-title">
 
-<div class="icon info">
-<i class="fa fa-circle-info"></i>
-</div>
+<i class="fa fa-crown"></i>
 
-<div class="text">
-<h3>My Information</h3>
-<p>View your account information</p>
-</div>
+Subscription
 
 </div>
 
-<div class="arrow">
-<i class="fa fa-chevron-right"></i>
-</div>
+<div class="plan">
+
+<h3 id="subscriptionPlan">
+
+FREE PLAN
+
+</h3>
+
+<p>
+
+Tokens Available:
+
+<b id="tokenBalance">
+
+0
+
+</b>
+
+</p>
+
+
+
+</p>
 
 </div>
 
-<div class="card" onclick="location.href='verify.html'">
+<button
+    class="primary"
+    onclick="location.href='pay.html'">
 
-<div class="left">
+    <i class="fa fa-coins"></i>
+    Add Tokens
 
-<div class="icon verify">
+</button>
+
+</div>
+
+<!-- ==========================
+VERIFICATION
+========================== -->
+
+<div class="card">
+
+<div class="card-title">
+
 <i class="fa fa-shield-halved"></i>
-</div>
 
-<div class="text">
-<h3>Farmer Verification</h3>
-<p>Verify your AgriHub account</p>
-</div>
+Verification
 
 </div>
 
-<div class="arrow">
+<div
+id="verificationMessage"
+style="margin-bottom:15px;">
+
+Loading...
+
+</div>
+
+<button
+
+class="primary"
+
+onclick="location.href='verify.html'">
+
+Manage Verification
+
+</button>
+
+</div>
+
+<!-- ==========================
+SETTINGS
+========================== -->
+
+<div class="card">
+
+<div class="card-title">
+
+<i class="fa fa-gear"></i>
+
+Settings
+
+</div>
+
+<div class="menu">
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-lock"></i>
+
+Change Password
+
+</div>
+
 <i class="fa fa-chevron-right"></i>
+
+</div>
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-bell"></i>
+
+Notifications
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
+</div>
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-globe"></i>
+
+Language
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
+</div>
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-moon"></i>
+
+Appearance
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
 </div>
 
 </div>
 
-<div class="card" onclick="location.href='index.html'">
+</div>
 
-<div class="left">
+<!-- ==========================
+SUPPORT
+========================== -->
 
-<div class="icon logout">
+<div class="card">
+
+<div class="card-title">
+
+<i class="fa fa-circle-question"></i>
+
+Support
+
+</div>
+
+<div class="menu">
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-headset"></i>
+
+Contact Support
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
+</div>
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-book"></i>
+
+Help Centre
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
+</div>
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-user-shield"></i>
+
+Privacy Policy
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
+</div>
+
+<div class="menu-item">
+
+<div>
+
+<i class="fa fa-file-contract"></i>
+
+Terms & Conditions
+
+</div>
+
+<i class="fa fa-chevron-right"></i>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ==========================
+LOGOUT
+========================== -->
+
+<div class="card">
+
+<button
+
+class="logout"
+
+onclick="logout()">
+
 <i class="fa fa-right-from-bracket"></i>
-</div>
 
-<div class="text">
-<h3>Logout</h3>
-<p>Sign out of your account</p>
-</div>
+Logout
+
+</button>
 
 </div>
 
-<div class="arrow">
-<i class="fa fa-chevron-right"></i>
-</div>
+<!-- ==========================
+FOOTER
+========================== -->
+
+<div class="footer">
+
+<b>AgriHub Marketplace</b>
+
+<br><br>
+
+Version 1.0
+
+<br>
+
+© 2026 AgriHub
 
 </div>
 
-</body>
-</html>
+</div>
+<script>
+// =====================================
+// SUPABASE
+// =====================================
+
+const sb = supabase.createClient(
+    "https://wfbepkegbtxszhhozqtz.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
+);
+
+// =====================================
+// CURRENT USER
+// =====================================
+
+function getCurrentUser(){
+
+    try{
+
+        const raw = localStorage.getItem("agrihub_user");
+
+        if(!raw || raw==="null" || raw==="undefined"){
+            return null;
+        }
+
+        return JSON.parse(raw);
+
+    }catch(err){
+
+        console.error(err);
+        return null;
+
+    }
+
+}
+
+const user = getCurrentUser();
+
+if(!user){
+
+    alert("Please login first.");
+
+    window.location.href="index.html";
+
+}
+
+// =====================================
+// LOAD PROFILE
+// =====================================
+
+async function loadUser(){
+
+    const {data,error} = await sb
+
+        .from("users")
+
+        .select("*")
+
+        .eq("id",user.id)
+
+        .single();
+
+    if(error){
+
+        console.error(error);
+
+        return;
+
+    }
+
+    // Header
+
+    document.getElementById("fullName").innerText =
+        data.full_name || "Unknown User";
+
+    document.getElementById("profileName").innerText =
+        data.full_name || "-";
+
+    document.getElementById("profilePhone").innerText =
+        data.phone || "-";
+
+    document.getElementById("profileID").innerText =
+        data.id_number || "-";
+
+    document.getElementById("profileCounty").innerText =
+        data.county || "-";
+
+    document.getElementById("profileSubCounty").innerText =
+        data.sub_county || "-";
+
+    document.getElementById("profileCentre").innerText =
+        data.shopping_centre || "-";
+        document.getElementById("tokenBalance").innerText =
+    Number(data.token_balance || 0).toFixed(2);
+
+    document.getElementById("avatar").src =
+        "https://i.pravatar.cc/200?u=" + user.id;
+
+    if(data.created_at){
+
+        const joined =
+            new Date(data.created_at)
+            .toLocaleDateString();
+
+        document.getElementById("memberSince").innerText =
+            "Member since " + joined;
+
+    }
+
+}
+
+// =====================================
+// VERIFICATION
+// =====================================
+
+async function loadVerification(){
+
+    const {data,error} = await sb
+
+        .from("verifications")
+
+        .select("status")
+
+        .eq("user_id",user.id)
+
+        .maybeSingle();
+
+    if(error){
+
+        console.error(error);
+
+        return;
+
+    }
+
+    const badge =
+        document.getElementById("verifyStatus");
+
+    const message =
+        document.getElementById("verificationMessage");
+
+    if(!data){
+
+        badge.innerText="Not Verified";
+
+        badge.style.background="#fee2e2";
+        badge.style.color="#dc2626";
+
+        message.innerHTML=
+        `
+        Verify your account to unlock:
+
+        <br><br>
+
+        ✔ Messaging
+
+        <br>
+
+        ✔ WhatsApp Contact
+
+        <br>
+
+        ✔ Trusted Seller Badge
+        `;
+
+        return;
+
+    }
+
+    const status =
+        (data.status || "")
+        .toLowerCase();
+
+    if(status==="verified" || status==="approved"){
+
+        badge.innerText="Verified";
+
+        badge.style.background="#dcfce7";
+        badge.style.color="#15803d";
+
+        message.innerHTML=
+        `
+        ✅ Your account has been verified.
+
+        <br><br>
+
+        Buyers can trust your listings.
+        `;
+
+    }
+
+    else if(status==="pending"){
+
+        badge.innerText="Pending";
+
+        badge.style.background="#fef3c7";
+        badge.style.color="#b45309";
+
+        message.innerHTML=
+        `
+        ⏳ Your documents are under review.
+        `;
+
+    }
+
+    else{
+
+        badge.innerText="Rejected";
+
+        badge.style.background="#fee2e2";
+        badge.style.color="#dc2626";
+
+        message.innerHTML=
+        `
+        ❌ Your verification was rejected.
+
+        <br><br>
+
+        Please submit new documents.
+        `;
+
+    }
+
+}
+
+// =====================================
+// LOGOUT
+// =====================================
+
+function logout(){
+
+    if(!confirm("Logout from AgriHub?"))
+        return;
+
+    localStorage.removeItem("agrihub_user");
+
+    window.location.href="index.html";
+
+}
+
+// =====================================
+// INITIALIZE
+// =====================================
+
+(async()=>{
+
+    await loadUser();
+
+    await loadVerification();
+
+})();
+
+/* ==========================================
+   PART B: LOAD USER PROFILE
+========================================== */
+
+async function loadProfile() {
+
+    try {
+
+        // Get current user's details
+        const { data: profile, error } = await sb
+            .from("users")
+            .select("*")
+            .eq("id", currentUser.id)
+            .single();
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        // Name
+        document.getElementById("profileName").innerText =
+            profile.full_name || "Unknown User";
+
+        // Avatar
+        document.getElementById("profileAvatar").src =
+            `https://i.pravatar.cc/200?u=${profile.id}`;
+
+        // Information
+        document.getElementById("infoName").innerText =
+            profile.full_name || "-";
+
+        document.getElementById("infoPhone").innerText =
+            profile.phone || "-";
+
+        document.getElementById("infoWhatsapp").innerText =
+            profile.whatsapp_number || profile.phone || "-";
+
+        document.getElementById("infoId").innerText =
+            profile.id_number || "-";
+
+        document.getElementById("infoCounty").innerText =
+            profile.county || "-";
+
+        document.getElementById("infoSubCounty").innerText =
+            profile.sub_county || "-";
+
+        document.getElementById("infoCentre").innerText =
+            profile.shopping_centre || "-";
+
+        document.getElementById("infoJoined").innerText =
+            new Date(profile.created_at).toLocaleDateString();
+
+    } catch (err) {
+        console.error(err);
+    }
+
+}
+
+/* ==========================================
+   LOAD ACCOUNT STATISTICS
+========================================== */
+
+async function loadStats() {
+
+    // Get all user products
+    const { data: products, error } = await sb
+        .from("products")
+        .select("*")
+        .eq("user_id", user.id);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    let totalWorth = 0;
+    let soldItems = 0;
+
+    products.forEach(p => {
+
+        const price = Number(p.price || 0);
+        const qty = Number(p.quantity || 1);
+
+        // Total worth of all listings
+        totalWorth += price * qty;
+
+        // Items sold
+        if (p.sold === true) {
+            soldItems += qty;
+        }
+
+    });
+
+    // UPDATE UI
+    document.getElementById("totalWorth").innerText =
+        "KES " + totalWorth.toLocaleString();
+
+    document.getElementById("soldItems").innerText =
+        soldItems;
+
+}
+
+/* ==========================================
+   LOAD SUBSCRIPTION
+========================================== */
+
+async function loadSubscription() {
+
+    // FREE PLAN (until subscriptions are added)
+
+    document.getElementById("subscriptionPlan").innerText =
+        "Free Plan";
+
+    document.getElementById("subscriptionExpiry").innerText =
+        "Never Expires";
+
+}
+
+/* ==========================================
+   INITIALIZE PAGE
+========================================== */
+
+(async () => {
+
+    await loadVerification();
+
+    await loadProfile();
+
+    await loadStats();
+
+    await loadSubscription();
+
+})();
+
+/* ==========================================
+   PART C
+   ACCOUNT ACTIONS
+========================================== */
+
+/* ===============================
+   EDIT PROFILE
+================================ */
+
+function editProfile(){
+
+    alert("Edit Profile feature coming next.");
+
+    // Later:
+    // window.location.href = "edit-profile.html";
+
+}
+
+/* ===============================
+   CHANGE PASSWORD
+================================ */
+
+function changePassword(){
+
+    alert("Change Password feature coming next.");
+
+    // Later:
+    // window.location.href="change-password.html";
+
+}
+
+/* ===============================
+   SUBSCRIPTION
+================================ */
+
+function manageSubscription(){
+
+    alert("Subscription system coming soon.");
+
+    // Future:
+    // window.location.href="subscription.html";
+
+}
+
+/* ===============================
+   NOTIFICATIONS
+================================ */
+
+let notificationsEnabled = true;
+
+function toggleNotifications(){
+
+    notificationsEnabled = !notificationsEnabled;
+
+    const txt = document.getElementById("notificationStatus");
+
+    if(notificationsEnabled){
+
+        txt.innerText="Enabled";
+
+        alert("Notifications Enabled");
+
+    }else{
+
+        txt.innerText="Disabled";
+
+        alert("Notifications Disabled");
+
+    }
+
+}
+
+/* ===============================
+   DARK MODE
+================================ */
+
+function toggleDarkMode(){
+
+    document.body.classList.toggle("dark-mode");
+
+    localStorage.setItem(
+        "darkMode",
+        document.body.classList.contains("dark-mode")
+    );
+
+}
+
+/* Restore Theme */
+
+if(localStorage.getItem("darkMode")=="true"){
+
+    document.body.classList.add("dark-mode");
+
+}
+
+/* ===============================
+   DELETE ACCOUNT
+================================ */
+
+async function deleteAccount(){
+
+    const ok = confirm(
+        "This will permanently delete your account and listings.\n\nContinue?"
+    );
+
+    if(!ok) return;
+
+    try{
+
+        // Delete products
+        await sb
+        .from("products")
+        .delete()
+        .eq("user_id",currentUser.id);
+
+        // Delete verification
+        await sb
+        .from("verifications")
+        .delete()
+        .eq("user_id",currentUser.id);
+
+        // Delete conversations
+        await sb
+        .from("conversations")
+        .delete()
+        .or(`user1.eq.${currentUser.id},user2.eq.${currentUser.id}`);
+
+        // Delete user
+        await sb
+        .from("users")
+        .delete()
+        .eq("id",currentUser.id);
+
+        localStorage.removeItem("agrihub_user");
+
+        alert("Account deleted.");
+
+        window.location.href="index.html";
+
+    }catch(err){
+
+        console.error(err);
+
+        alert("Unable to delete account.");
+
+    }
+
+}
+
+/* ===============================
+   SHARE APP
+================================ */
+
+function shareApp(){
+
+    if(navigator.share){
+
+        navigator.share({
+
+            title:"Nandi AgriHub",
+
+            text:"Buy and Sell on Nandi AgriHub",
+
+            url:location.origin
+
+        });
+
+    }else{
+
+        navigator.clipboard.writeText(location.origin);
+
+        alert("Link copied.");
+
+    }
+
+}
+
+/* ===============================
+   CONTACT SUPPORT
+================================ */
+
+function contactSupport(){
+
+    window.open(
+        "https://wa.me/254725880306",
+        "_blank"
+    );
+
+}
+
+/* ===============================
+   ABOUT APP
+================================ */
+
+function aboutApp(){
+
+    alert(
+`Nandi AgriHub
+
+Version 1.0
+
+Marketplace for farmers and traders.
+
+© 2026`
+    );
+
+}
+</script>
+</script>
+<script src="tokenEngine.js"></script>

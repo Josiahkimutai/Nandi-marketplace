@@ -269,15 +269,23 @@ form.addEventListener("submit", async(e)=>{
     return;
   }
 
-  const { error } = await client.from("users").insert([{
+const now = new Date();
+
+const { error } = await client.from("users").insert([{
     full_name: fullName,
     phone: phone,
     id_number: idNumber,
     sub_county: subCounty,
     shopping_centre: shoppingCentre,
-    password: password.trim()
-  }]);
+    password: password.trim(),
 
+    // =========================
+    // TOKEN SYSTEM START
+    // =========================
+     token_balance: 10.42,
+    last_token_update: now.toISOString(),
+    account_created_at: now.toISOString()
+}]);
   if(error){
     show("error","Registration failed");
     reset();
@@ -292,7 +300,53 @@ form.addEventListener("submit", async(e)=>{
 
   reset();
 });
-</script>
+async function syncTokens(userId) {
 
+    const { data, error } = await client
+        .from("users")
+        .select("token_balance,last_token_update")
+        .eq("id", userId)
+        .single();
+
+    if (error || !data) return;
+
+    const now = new Date();
+
+    const lastUpdate = data.last_token_update
+        ? new Date(data.last_token_update)
+        : now;
+
+    // minutes passed while offline OR active
+    const minutesPassed = Math.floor((now - lastUpdate) / 60000);
+
+    if (minutesPassed <= 0) return;
+
+    const TOKENS_PER_MINUTE = 1; // CHANGE THIS LATER IF YOU WANT
+
+    const tokensToDeduct = minutesPassed * TOKENS_PER_MINUTE;
+
+    const newBalance = Math.max(
+        0,
+        Number(data.token_balance) - tokensToDeduct
+    );
+
+    await client
+        .from("users")
+        .update({
+            token_balance: newBalance,
+            last_token_update: now.toISOString()
+        })
+        .eq("id", userId);
+
+    console.log("SYNC DONE:", {
+        minutesPassed,
+        tokensToDeduct,
+        newBalance
+    });
+
+    return newBalance;
+}
+</script>
+<script src="tokenEngine.js"></script>
 </body>
 </html>

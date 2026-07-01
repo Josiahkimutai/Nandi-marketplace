@@ -877,7 +877,7 @@ body{
       Logout
   </button>
 
-</div>>
+</div>
 
 <script>
 const sb = supabase.createClient(
@@ -885,10 +885,15 @@ const sb = supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
 );
 
-const user = JSON.parse(localStorage.getItem("agrihub_user"));
-if (!user) window.location.href = "index.html";
-let buyerLatitude = null;
-let buyerLongitude = null;
+const user = JSON.parse(localStorage.getItem("agrihub_user") || "null");
+window.sb = sb;
+window.user = user;
+
+if (!user || !user.id) {
+  window.location.href = "index.html";
+}
+
+
 async function getBuyerLocation() {
 
     return new Promise((resolve, reject) => {
@@ -900,19 +905,31 @@ async function getBuyerLocation() {
                 buyerLatitude = position.coords.latitude;
                 buyerLongitude = position.coords.longitude;
 
+                // 🔥 ADD THESE
+                console.log("BUYER LOCATION");
+                console.log("Latitude:", buyerLatitude);
+                console.log("Longitude:", buyerLongitude);
+                console.log("Accuracy:", position.coords.accuracy, "meters");
+
                 resolve();
 
             },
 
-            error => reject(error),
+            error => {
+                console.error(error);
+                reject(error);
+            },
 
             {
-                enableHighAccuracy: true
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 15000
             }
 
         );
 
     });
+
 
 }
 /* =========================
@@ -1025,17 +1042,19 @@ function updateVerificationUI(status) {
    FEED
 ========================= */
 async function loadFeed() {
-const { data, error } = await sb
-  .from("products")
-  .select("*")
-  .order("created_at", { ascending: false });
 
-console.log("Feed data:", data);
-console.log("Feed error:", error);
+  const { data, error } = await sb
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-console.log(data);
+  if (error) {
+    console.error(error);
+    return;
+  }
 
   allProducts = data || [];
+
   updateStats(allProducts);
   renderFeed(allProducts);
   updateListingsBadge(allProducts);
@@ -1054,6 +1073,7 @@ function updateListingsBadge(products){
     } else {
         badge.style.display = "none";
     }
+ 
 }
 function updateStats(products){
 
@@ -1229,15 +1249,22 @@ if (
     p.longitude !== null
 ) {
 
-    const distance = calculateDistance(
-        buyerLatitude,
-        buyerLongitude,
-        p.latitude,
-        p.longitude
-    );
+ console.log("BUYER:");
+console.log(buyerLatitude, buyerLongitude);
 
-    distanceText = `${distance.toFixed(1)} km away`;
+console.log("PRODUCT:");
+console.log(p.latitude, p.longitude);
 
+const distance = calculateDistance(
+    buyerLatitude,
+    buyerLongitude,
+    p.latitude,
+    p.longitude
+);
+
+console.log("DISTANCE:", distance);
+
+distanceText = `${distance.toFixed(1)} km away`;
 }
 div.innerHTML = `
 <div class="post">
@@ -1253,7 +1280,7 @@ div.innerHTML = `
       <b>${sellerName}</b>
 
       <span style="
-        background:${verifiedUsers[p.user_id] ? '#dc2626' : '#16a34a'};
+        background:${verifiedUsers[p.user_id] ? '#16a34a' : '#dc2626'};
         color:white;
         padding:4px 10px;
         border-radius:999px;
@@ -1263,7 +1290,7 @@ div.innerHTML = `
         align-items:center;
         gap:4px;
       ">
-        ${verifiedUsers[p.user_id] ? ' ✖NotVerified' : ' ✔Verified'}
+        ${verifiedUsers[p.user_id] ? ' ✔Verified' : ' ✖NotVerified'}
       </span>
 
     </div>
@@ -1572,27 +1599,87 @@ function closeImageViewer(){
     console.error("Like error:", err);
   }
 }
+const productsChannel = sb
+  .channel("products-live")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "products"
+    },
+    (payload) => {
+      console.log("🔥 PRODUCT EVENT:", payload);
+      loadFeed();
+    }
+  )
+  .subscribe((status) => {
+      console.log("Products channel:", status);
+  });
+  async function syncOfflineTokens() {
+
+    const { data, error } = await sb
+        .from("users")
+        .select("token_balance,last_token_update")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !data) return;
+
+    const now = new Date();
+    const last = data.last_token_update
+        ? new Date(data.last_token_update)
+        : now;
+
+    // total seconds offline/online since last update
+    const diffMs = now - last;
+
+    if (diffMs <= 0) return;
+
+    // convert to 30-second blocks
+    const blocks = Math.floor(diffMs / 30000);
+
+    if (blocks <= 0) return;
+
+    const TOKENS_PER_30_SECONDS = 0.11574075;
+
+    const deduct = blocks * TOKENS_PER_30_SECONDS;
+
+    const newBalance = Math.max(
+        0,
+        Number(data.token_balance) - deduct
+    ).toFixed(6);
+
+    await sb
+        .from("users")
+        .update({
+            token_balance: newBalance,
+            last_token_update: now.toISOString()
+        })
+        .eq("id", user.id);
+
+    console.log("OFFLINE SYNC DEDUCTED:", deduct);
+}
 /* =========================
    INIT
 ========================= */
+
 (async () => {
 
     await loadUser();
-
     await loadVerification();
-
     await loadVerifiedUsers();
 
     try {
         await getBuyerLocation();
-    } catch (e) {
-        console.log("Location permission denied.");
-    }
+    } catch (e) {}
+
+    await syncOfflineTokens();   // 🔥 IMPORTANT NEW STEP
 
     await loadFeed();
-
     await loadUnreadMessages();
 
+    
 })();
 </script>
 <!-- VERIFY POPUP -->
@@ -1682,5 +1769,6 @@ font-weight:bold;
 </button>
 
 </div>
+<script src="tokenEngine.js"></script>
 </body>
 </html>

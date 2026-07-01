@@ -38,9 +38,8 @@ body{
   margin:20px auto;
   padding:10px;
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
   gap:12px;
-
 }
 
 /* CARD */
@@ -247,6 +246,6 @@ async function markSold(id){
 loadMyListings();
 
 </script>
-
+<script src="tokenEngine.js"></script>
 </body>
 </html>
