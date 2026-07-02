@@ -5,29 +5,95 @@ const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-/* ================= ENV ================= */
+/* =====================================================
+   ENVIRONMENT VARIABLES
+===================================================== */
+
 const {
-  CONSUMER_KEY,
-  CONSUMER_SECRET,
-  SHORTCODE,
-  PASSKEY,
-  CALLBACK_URL,
-  SUPABASE_URL,
-  SUPABASE_KEY
+    CONSUMER_KEY,
+    CONSUMER_SECRET,
+    SHORTCODE,
+    PASSKEY,
+    CALLBACK_URL,
+
+    JOSKEV_SUPABASE_URL,
+    JOSKEV_SUPABASE_KEY,
+
+    AGRIHUB_SUPABASE_URL,
+    AGRIHUB_SUPABASE_KEY
+
 } = process.env;
 
-/* ================= SUPABASE ================= */
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+/* =====================================================
+   SUPABASE CONNECTIONS
+===================================================== */
 
-/* ================= HOME ================= */
-app.get("/", (req, res) => {
-  res.send("M-Pesa Server Running 🚀");
+const joskevDB = createClient(
+    JOSKEV_SUPABASE_URL,
+    JOSKEV_SUPABASE_KEY
+);
+
+const agrihubDB = createClient(
+    AGRIHUB_SUPABASE_URL,
+    AGRIHUB_SUPABASE_KEY
+);
+
+/* =====================================================
+   DATABASE HELPER
+===================================================== */
+
+function getDatabase(project){
+
+    if(project === "AGRIHUB"){
+        return agrihubDB;
+    }
+
+    return joskevDB;
+
+}
+
+/* =====================================================
+   HOME
+===================================================== */
+
+app.get("/", (req,res)=>{
+
+    res.send("Unified M-Pesa Backend Running 🚀");
+
 });
+
+/* =====================================================
+   ACCESS TOKEN
+===================================================== */
+
+async function getAccessToken(){
+
+    const auth = Buffer.from(
+        `${CONSUMER_KEY}:${CONSUMER_SECRET}`
+    ).toString("base64");
+
+    const response = await axios.get(
+
+        "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+
+        {
+            headers:{
+                Authorization:`Basic ${auth}`
+            }
+        }
+
+    );
+
+    return response.data.access_token;
+
+}
+
 
 /* ================= ACCESS TOKEN ================= */
 async function getAccessToken() {
@@ -48,212 +114,320 @@ async function getAccessToken() {
 }
 
 /* ================= STK PUSH ================= */
+/* =====================================================
+   STK PUSH
+===================================================== */
+
 app.post("/stkpush", async (req, res) => {
-  try {
-  const { phone, amount, userId } = req.body;
 
-    if (!phone || !amount) {
-      return res.status(400).json({ error: "Phone and amount required" });
-    }
+    try {
 
-    const token = await getAccessToken();
-
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[-:T.Z]/g, "")
-      .slice(0, 14);
-
-    const password = Buffer.from(
-      `${SHORTCODE}${PASSKEY}${timestamp}`
-    ).toString("base64");
-
-    const stkBody = {
-      BusinessShortCode: SHORTCODE,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: "CustomerPayBillOnline",
-      Amount: Number(amount),
-      PartyA: phone,
-      PartyB: SHORTCODE,
-      PhoneNumber: phone,
-      CallBackURL: CALLBACK_URL,
-      AccountReference:"AGRIHUB",
-      TransactionDesc: "Payment"
-    };
-
-    const response = await axios.post(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      stkBody,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
+        const {
+            phone,
+            amount,
+            userId,
+            project
+        } = req.body;
+console.log("=== STK REQUEST BODY ===");
+console.log(req.body);
+console.log("=========================");
+        if (!phone || !amount || !userId) {
+            return res.status(400).json({
+                error: "Phone, amount and userId are required."
+            });
         }
-      }
-    );
 
-    const stkData = response.data;
+        // Choose the correct database
+    const db = getDatabase(project);
 
-    console.log("STK RESPONSE:", stkData);
+console.log("================================");
+console.log("PROJECT RECEIVED:", project);
+console.log(
+  "DATABASE SELECTED:",
+  db === agrihubDB ? "AGRIHUB" : "JOSKEV"
+);
+console.log("================================");
 
-    // save pending payment immediately
-    if (stkData.CheckoutRequestID) {
-    await supabase.from("payments").insert([
-{
-    user_id:userId,
-    phone,
-    amount:Number(amount),
-    checkout_request_id:stkData.CheckoutRequestID,
-    merchant_request_id:stkData.MerchantRequestID,
-    status:"PENDING",
-    message:"Waiting for callback"
-}
-]);
-    }
+        const token = await getAccessToken();
 
-    res.json(stkData);
+        const timestamp = new Date()
+            .toISOString()
+            .replace(/[-:T.Z]/g, "")
+            .slice(0, 14);
 
-  } catch (err) {
-    console.log("STK ERROR:", err.response?.data || err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
+        const password = Buffer.from(
+            `${SHORTCODE}${PASSKEY}${timestamp}`
+        ).toString("base64");
 
-/* ================= CALLBACK (FIXED) ================= */
-app.post("/callback", async (req, res) => {
-  try {
-    console.log("CALLBACK RECEIVED:", JSON.stringify(req.body, null, 2));
+        const stkBody = {
 
-    const stk = req.body?.Body?.stkCallback;
+            BusinessShortCode: SHORTCODE,
 
-    if (!stk) {
-      return res.json({ ResultCode: 0, ResultDesc: "Accepted" });
-    }
+            Password: password,
 
-    const checkoutRequestID = stk.CheckoutRequestID;
-    const merchantRequestID = stk.MerchantRequestID;
-    const resultCode = stk.ResultCode;
-    const resultDesc = stk.ResultDesc;
+            Timestamp: timestamp,
 
-    const items = stk.CallbackMetadata?.Item || [];
+            TransactionType: "CustomerPayBillOnline",
 
-    const phone = items.find(i => i.Name === "PhoneNumber")?.Value || null;
-    const amount = items.find(i => i.Name === "Amount")?.Value || null;
-    const receipt = items.find(i => i.Name === "MpesaReceiptNumber")?.Value || null;
-    const transactionDate = items.find(i => i.Name === "TransactionDate")?.Value || null;
+            Amount: Number(amount),
 
-    const success = resultCode === 0;
+            PartyA: phone,
 
-    const paymentData = {
-      phone,
-      amount,
-      mpesa_receipt: receipt,
-      transaction_date: transactionDate ? String(transactionDate) : null,
-      checkout_request_id: checkoutRequestID,
-      merchant_request_id: merchantRequestID,
-      status: success ? "SUCCESS" : "FAILED",
-      result_code: resultCode,
-      result_desc: resultDesc,
-      message: success ? "Payment successful" : resultDesc
-    };
+            PartyB: SHORTCODE,
 
-    // UPSERT = SAFE (no duplicates, no missing rows)
-    const { error } = await supabase
-      .from("payments")
-      .upsert(paymentData, {
-        onConflict: "checkout_request_id"
-      });
+            PhoneNumber: phone,
 
-    if (error) {
-      console.log("CALLBACK ERROR:", error.message);
-    } else {
-      console.log("PAYMENT SAVED ✅");
-    }
+            CallBackURL: CALLBACK_URL,
 
-    // update user if success
-  // ======================================================
-// CREDIT TOKENS
-// ======================================================
+            AccountReference: project || "JOSKEV",
 
-if(success){
+            TransactionDesc: "Payment"
 
-    const { data: payment } = await supabase
-        .from("payments")
-        .select("user_id, amount")
-        .eq("checkout_request_id", checkoutRequestID)
-        .single();
+        };
 
-    if(payment){
+        const response = await axios.post(
 
-        const TOKENS_PER_KSH = 1000;
+            "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
 
-        const tokensToAdd =
-            Number(payment.amount) * TOKENS_PER_KSH;
+            stkBody,
 
-        const { data:user } = await supabase
-            .from("users")
-            .select("token_balance")
-            .eq("id", payment.user_id)
-            .single();
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
 
-        const current =
-            Number(user.token_balance || 0);
-
-        await supabase
-            .from("users")
-            .update({
-                token_balance: current + tokensToAdd
-            })
-            .eq("id", payment.user_id);
-
-        console.log(
-            `${tokensToAdd} tokens added`
         );
 
+        const stkData = response.data;
+
+        console.log("====================================");
+        console.log("NEW STK PUSH");
+        console.log("PROJECT:", project);
+        console.log("PHONE:", phone);
+        console.log("AMOUNT:", amount);
+        console.log("====================================");
+
+        if (stkData.CheckoutRequestID) {
+console.log("================================");
+console.log("PROJECT:", project);
+console.log("DATABASE:", db === agrihubDB ? "AGRIHUB" : "JOSKEV");
+console.log("================================");
+            const { data, error } = await db
+    .from("payments")
+    .insert([
+        {
+            phone,
+            amount: Number(amount),
+            checkout_request_id: stkData.CheckoutRequestID,
+            merchant_request_id: stkData.MerchantRequestID,
+            status: "PENDING",
+            message: "Waiting for callback"
+        }
+    ])
+    .select();
+
+console.log("INSERT DATA:", data);
+console.log("INSERT ERROR:", error);
+
+        }
+
+        res.json(stkData);
+
     }
 
-}
+    catch (err) {
 
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
+        console.log("STK ERROR");
 
-  } catch (err) {
-    console.log("CALLBACK ERROR:", err.message);
-    res.json({ ResultCode: 0, ResultDesc: "Accepted" });
-  }
+        console.log(err.response?.data || err.message);
+
+        res.status(500).json({
+
+            error: err.message
+
+        });
+
+    }
+
+});
+/* =====================================================
+   M-PESA CALLBACK
+===================================================== */
+
+app.post("/callback", async (req, res) => {
+
+    try {
+
+        const callback = req.body;
+
+        console.log("====================================");
+        console.log("M-PESA CALLBACK RECEIVED");
+        console.log(JSON.stringify(callback, null, 2));
+        console.log("====================================");
+
+        const stkCallback = callback?.Body?.stkCallback;
+
+        if (!stkCallback) {
+            return res.json({ ResultCode: 0, ResultDesc: "OK" });
+        }
+
+        const checkoutRequestID = stkCallback.CheckoutRequestID;
+        const resultCode = stkCallback.ResultCode;
+
+        // Determine which DB this transaction belongs to
+        // (we stored CheckoutRequestID in BOTH DBs, so we search both)
+        const dbs = [agrihubDB, joskevDB];
+
+        let paymentRecord = null;
+        let activeDB = null;
+
+        for (const db of dbs) {
+
+            const { data } = await db
+                .from("payments")
+                .select("*")
+                .eq("checkout_request_id", checkoutRequestID)
+                .single();
+
+            if (data) {
+                paymentRecord = data;
+                activeDB = db;
+                break;
+            }
+        }
+
+        if (!paymentRecord) {
+            console.log("Payment record not found");
+            return res.json({ ResultCode: 0, ResultDesc: "OK" });
+        }
+
+        // PAYMENT FAILED
+        if (resultCode !== 0) {
+
+            await activeDB
+                .from("payments")
+                .update({
+                    status: "FAILED",
+                    message: "Payment failed"
+                })
+                .eq("checkout_request_id", checkoutRequestID);
+
+            return res.json({ ResultCode: 0, ResultDesc: "OK" });
+        }
+
+        // Extract amount safely
+        const callbackMetadata = stkCallback.CallbackMetadata?.Item || [];
+        const amountItem = callbackMetadata.find(i => i.Name === "Amount");
+        const mpesaReceiptItem = callbackMetadata.find(i => i.Name === "MpesaReceiptNumber");
+
+        const amount = amountItem?.Value || paymentRecord.amount;
+        const mpesaReceipt = mpesaReceiptItem?.Value || "UNKNOWN";
+
+        console.log("Payment SUCCESS:", {
+            amount,
+            mpesaReceipt
+        });
+
+        /* =========================================
+           UPDATE PAYMENT RECORD
+        ========================================= */
+
+        await activeDB
+            .from("payments")
+            .update({
+                status: "SUCCESS",
+                message: "Payment completed",
+                mpesa_receipt: mpesaReceipt
+            })
+            .eq("checkout_request_id", checkoutRequestID);
+
+        /* =========================================
+           CREDIT USER (EDIT THIS PART LATER IF NEEDED)
+        ========================================= */
+
+        // Example: token system (adjust if you use different schema)
+        const { data: user } = await activeDB
+            .from("users")
+            .select("*")
+            .eq("id", paymentRecord.user_id)
+            .single();
+
+        if (user) {
+
+            const newBalance = (user.token_balance || 0) + amount;
+
+            await activeDB
+                .from("users")
+                .update({
+                    token_balance: newBalance
+                })
+                .eq("id", user.id);
+
+        }
+
+        return res.json({ ResultCode: 0, ResultDesc: "OK" });
+
+    }
+
+    catch (err) {
+
+        console.log("CALLBACK ERROR:", err.message);
+
+        return res.json({ ResultCode: 0, ResultDesc: "OK" });
+
+    }
+
 });
 
 /* ================= PAYMENT STATUS ================= */
 app.get("/payment-status/:id", async (req, res) => {
+
   try {
+
     const { id } = req.params;
 
-    const { data } = await supabase
-      .from("payments")
-      .select("*")
-      .eq("checkout_request_id", id)
-      .maybeSingle();
+    const dbs = [agrihubDB, joskevDB];
 
-    if (!data) {
-      return res.json({
-        success: true,
-        found: false,
-        status: "PENDING",
-        message: "Waiting for payment"
-      });
+    for (const db of dbs) {
+
+      const { data } = await db
+        .from("payments")
+        .select("*")
+        .eq("checkout_request_id", id)
+        .maybeSingle();
+
+      if (data) {
+
+        return res.json({
+          success: true,
+          found: true,
+          status: data.status,
+          payment: data
+        });
+
+      }
+
     }
 
     return res.json({
       success: true,
-      found: true,
-      status: data.status,
-      payment: data
+      found: false,
+      status: "PENDING",
+      message: "Waiting for payment"
     });
 
-  } catch (err) {
+  }
+
+  catch (err) {
+
     return res.status(500).json({
       success: false,
       error: err.message
     });
+
   }
+
 });
 
 
