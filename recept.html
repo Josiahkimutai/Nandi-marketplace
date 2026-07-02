@@ -222,6 +222,26 @@ function downloadPDF(){
     doc.text("Receipt generated successfully", 20, 20);
     doc.save(`RECEIPT_${receiptId}.pdf`);
 }
+const checkoutRequestID = localStorage.getItem("checkoutRequestID");
+
+async function loadReceipt() {
+
+    const res = await fetch(
+        "https://mpesa-backend-k7ly.onrender.com/payment-status/" + checkoutRequestID
+    );
+
+    const data = await res.json();
+
+    if (!data.payment) return;
+
+    const p = data.payment;
+
+    document.getElementById("amount").innerText = p.amount;
+    document.getElementById("phone").innerText = p.phone;
+    document.getElementById("receipt").innerText = p.mpesa_receipt;
+    document.getElementById("status").innerText = p.status;
+}
+loadReceipt();
 </script>
 
 </body>

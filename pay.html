@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>M-Pesa Payment - Joskev Loans</title>
+<title>AGRIHUB - M-Pesa Payment</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{
@@ -181,10 +181,13 @@ button{
             font-weight:bold;
         ">
 
-    <div class="amount-note">
-        An M-Pesa prompt will be sent instantly to the phone number above.
-    </div>
+<div class="amount-note">
+    An M-Pesa prompt will be sent instantly to the phone number above.
+</div>
 
+<div class="amount-note">
+    1 KES = 1000 AGRI tokens
+</div>
 </div>
 
     <button id="payBtn" class="pay-btn" onclick="pay()">
@@ -354,6 +357,13 @@ async function pay() {
 
     stopChecking();
 
+    const user = JSON.parse(localStorage.getItem("agrihub_user"));
+
+    if (!user) {
+        alert("User not logged in");
+        throw new Error("No user in localStorage");
+    }
+
     const rawPhone = document.getElementById("phone").value.trim();
     const amount = Number(document.getElementById("amount").value);
 
@@ -374,20 +384,28 @@ async function pay() {
     resendBtn.style.display = "none";
 
     setStatus("Sending M-Pesa prompt to your phone...", "info");
+try {
 
-    try {
-
-        const res = await fetch(`${API}/stkpush`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-           body: JSON.stringify({
+    console.log({
+        phone: formattedPhone,
+        amount,
+        userId: user.id,
+        project: "AGRIHUB"
+    });
+console.log("Current user:", user);
+console.log("User ID:", user.id);
+    const res = await fetch(`${API}/stkpush`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        
+       body: JSON.stringify({
     phone: formattedPhone,
     amount: amount,
     userId: user.id
 })
-        });
+    });
 
         const data = await res.json();
 
