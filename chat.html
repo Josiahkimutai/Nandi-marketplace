@@ -361,6 +361,7 @@ if(!chatId){
 
 const chatBox = document.getElementById("chatBox");
 const msgInput = document.getElementById("msgInput");
+let typingTimeout = null;
 const sendBtn = document.getElementById("sendBtn");
 
 /* SAFE HTML */
@@ -526,6 +527,7 @@ async function sendMessage(){
     }
 
     msgInput.value = "";
+    await setTyping(false);
     await touchConversation();
     await loadMessages();
 
@@ -539,6 +541,17 @@ async function sendMessage(){
 }
 
 /* ENTER TO SEND */
+msgInput.addEventListener("input", () => {
+
+  setTyping(true);
+
+  clearTimeout(typingTimeout);
+
+  typingTimeout = setTimeout(() => {
+    setTyping(false);
+  }, 2000);
+
+});
 msgInput.addEventListener("keydown", function(e){
   if(e.key === "Enter"){
     e.preventDefault();
@@ -556,7 +569,7 @@ window.addEventListener("DOMContentLoaded", () => {
   loadMessages();
   loadUserStatus();
 
-  setInterval(loadUserStatus, 30000);
+  setInterval(loadUserStatus, 50000);
 });
 
 /* REALTIME (optional - if realtime fails, chat still works) */
@@ -589,7 +602,7 @@ async function loadUserStatus() {
   try {
     const { data, error } = await sb2
       .from("users")
-      .select("online, last_seen")
+      .select("online, last_seen, typing")
       .eq("id", chatUser)
       .maybeSingle();
 
@@ -606,11 +619,15 @@ async function loadUserStatus() {
       return;
     }
 
-    if (data.online === true) {
-      statusEl.innerText = "🟢 Online";
-    } else {
-      statusEl.innerText = "last seen " + formatLastSeen(data.last_seen);
-    }
+    if (data.typing) {
+  statusEl.innerText = "✍️ Typing...";
+}
+else if (data.online) {
+  statusEl.innerText = "🟢 Online";
+}
+else {
+  statusEl.innerText = "Last seen " + formatLastSeen(data.last_seen);
+}
 
   } catch (err) {
     console.error("STATUS CATCH:", err);
@@ -647,6 +664,20 @@ updatePresence();
 
 // keep updating every 15 seconds
 setInterval(updatePresence, 15000);
+async function setTyping(isTyping) {
+  if (!user || !user.id) return;
+
+  const { error } = await sb2
+    .from("users")
+    .update({
+      typing: isTyping
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Typing update failed:", error);
+  }
+}
 </script>
 <script src="tokenEngine.js"></script>
 </body>

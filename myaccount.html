@@ -505,6 +505,31 @@ grid-template-columns:1fr 1fr;
 padding:16px;
 
 }
+/* Back to Dashboard Button */
+
+.dashboard-btn{
+    width:100%;
+    background:#1f8f4e;
+    color:#fff;
+    border:none;
+    border-radius:14px;
+    padding:15px;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    margin-bottom:18px;
+    transition:.25s;
+    box-shadow:0 6px 15px rgba(31,143,78,.25);
+}
+
+.dashboard-btn:hover{
+    background:#15753d;
+    transform:translateY(-2px);
+}
+
+.dashboard-btn i{
+    margin-right:8px;
+}
 
 }
 
@@ -550,6 +575,13 @@ CONTENT
 ========================== -->
 
 <div class="container">
+
+<button
+    class="dashboard-btn"
+    onclick="window.location.href='farmerdashboard.html'">
+    <i class="fa fa-arrow-left"></i>
+    Back to Dashboard
+</button>
 
 <!-- ==========================
 PERSONAL INFORMATION
