@@ -1557,6 +1557,23 @@ async function logout() {
   localStorage.removeItem("agrihub_user");
   window.location.href = "index.html";
 }
+function updatePresence() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: true,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+}
+
+// run immediately when page loads
+updatePresence();
+
+// keep updating every 15 seconds
+setInterval(updatePresence, 15000);
 </script>
 </script>
 <script src="tokenEngine.js"></script>
