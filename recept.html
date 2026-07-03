@@ -156,12 +156,16 @@ h1{
         <div class="row"><div class="label">Name</div><div class="value" id="name"></div></div>
         <div class="row"><div class="label">Phone</div><div class="value" id="phone"></div></div>
         <div class="row"><div class="label">Amount</div><div class="value" id="amount"></div></div>
+        <div class="row">
+    <div class="label">Tokens Added</div>
+    <div class="value" id="tokens"></div>
+</div>
         <div class="row"><div class="label">Receipt</div><div class="value" id="receipt"></div></div>
         <div class="row"><div class="label">Date</div><div class="value" id="date"></div></div>
     </div>
 
     <!-- ✅ FIXED BUTTON -->
-    <button class="btn continue-btn" onclick="window.location.href='welcome.html'">
+    <button class="btn continue-btn" onclick="window.location.href='farmerdashboard.html'">
         Continue
     </button>
 
@@ -237,11 +241,24 @@ async function loadReceipt() {
     const p = data.payment;
 
     document.getElementById("amount").innerText = p.amount;
+    document.getElementById("tokens").innerText =
+    p.tokens_added + " Tokens";
     document.getElementById("phone").innerText = p.phone;
     document.getElementById("receipt").innerText = p.mpesa_receipt;
     document.getElementById("status").innerText = p.status;
 }
 loadReceipt();
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
 </script>
 
 </body>

@@ -253,31 +253,6 @@ app.post("/callback", async (req, res) => {
        UPDATE PAYMENT
     --------------------------- */
 
-    await supabase
-      .from("payments")
-      .update({
-
-        phone,
-
-        amount,
-
-        mpesa_receipt: receipt,
-
-        transaction_date: String(transactionDate),
-
-        result_code: resultCode,
-
-        result_desc: resultDesc,
-
-        message: resultDesc,
-
-        status:
-          resultCode === 0
-            ? "SUCCESS"
-            : "FAILED"
-
-      })
-      .eq("checkout_request_id", checkoutRequestID);
 
     /* --------------------------
        PAYMENT FAILED
@@ -327,6 +302,10 @@ app.post("/callback", async (req, res) => {
 
     const newBalance =
       currentTokens + tokens;
+      console.log("Amount:", amount);
+console.log("Tokens Purchased:", tokens);
+console.log("Current Balance:", currentTokens);
+console.log("New Balance:", newBalance);
 
     /* --------------------------
        UPDATE USER WALLET
@@ -352,16 +331,31 @@ app.post("/callback", async (req, res) => {
       })
 
       .eq("id", payment.user_id);
+     const { data: updatedPayment, error: paymentUpdateError } = await supabase
+  .from("payments")
+  .update({
+    phone,
+    amount,
+    mpesa_receipt: receipt,
+    transaction_date: String(transactionDate),
+    result_code: resultCode,
+    result_desc: resultDesc,
+    message: resultDesc,
+    status: "SUCCESS",
+    tokens_purchased: tokens,
+    token_balance_after: newBalance,
+    payment_completed_at: new Date().toISOString()
+  })
+  .eq("checkout_request_id", checkoutRequestID)
+  .select();
 
-    console.log(
-      "TOKENS CREDITED:",
-      tokens
-    );
-
-    console.log(
-      "NEW BALANCE:",
-      newBalance
-    );
+console.log("UPDATED PAYMENT:", updatedPayment);
+console.log("PAYMENT UPDATE ERROR:", paymentUpdateError);
+if (paymentUpdateError) {
+  console.error("PAYMENT UPDATE ERROR:", paymentUpdateError);
+} else {
+  console.log("UPDATED PAYMENT:", updatedPayment);
+}
 
     return res.json({
 

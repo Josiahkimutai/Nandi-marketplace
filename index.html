@@ -410,19 +410,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // SAVE USER
 
-            localStorage.setItem(
-                "agrihub_user",
-                JSON.stringify(data)
-            );
+         // MARK USER ONLINE
+await sb
+.from("users")
+.update({
+    online: true
+})
+.eq("id", data.id);
 
-            showMessage("✔ Login Successful", true);
+// SAVE USER
+data.online = true;
 
-            setTimeout(()=>{
+localStorage.setItem(
+    "agrihub_user",
+    JSON.stringify(data)
+);
 
-                window.location.href =
-                "farmerdashboard.html";
+showMessage("✔ Login Successful", true);
 
-            },1000);
+setTimeout(() => {
+
+    window.location.href = "farmerdashboard.html";
+
+}, 1000);
 
         }
 
@@ -439,6 +449,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
+});window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
 });
 </script>
 

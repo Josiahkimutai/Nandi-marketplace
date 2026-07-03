@@ -1533,6 +1533,30 @@ Marketplace for farmers and traders.
     );
 
 }
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
+async function logout() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+
+  await sb.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+
+  localStorage.removeItem("agrihub_user");
+  window.location.href = "index.html";
+}
 </script>
 </script>
 <script src="tokenEngine.js"></script>

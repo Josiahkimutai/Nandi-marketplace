@@ -9,7 +9,7 @@ const tokenSb = supabase.createClient(
     "https://wfbepkegbtxszhhozqtz.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
 );
-const allowedPages = ["myaccount.html", "dashboard.html"];
+const allowedPages = ["myaccount.html","sell.html"];
 
 const currentPage = window.location.pathname.split("/").pop();
 
@@ -211,20 +211,35 @@ function showNoTokensPopup() {
                 </p>
 
                 <button
-                    onclick="location.href='pay.html'"
-                    style="
-                        width:100%;
-                        padding:14px;
-                        border:none;
-                        border-radius:12px;
-                        background:#16a34a;
-                        color:white;
-                        font-size:16px;
-                        font-weight:bold;
-                        cursor:pointer;
-                    ">
-                    Buy Tokens
-                </button>
+onclick="location.href='pay.html'"
+style="
+background:#1f8f4e;
+color:#fff;
+border:none;
+padding:12px;
+width:100%;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+">
+Buy Tokens
+</button>
+
+<button
+onclick="history.back()"
+style="
+margin-top:10px;
+width:100%;
+padding:12px;
+background:#f3f4f6;
+color:#374151;
+border:1px solid #d1d5db;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+">
+← Back
+</button>
 
             </div>
 

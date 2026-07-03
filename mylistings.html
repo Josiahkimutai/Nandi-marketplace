@@ -244,7 +244,17 @@ async function markSold(id){
 }
 
 loadMyListings();
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
 
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
 </script>
 <script src="tokenEngine.js"></script>
 </body>

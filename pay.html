@@ -320,7 +320,7 @@ function checkPayment(checkoutRequestID) {
                 payBtn.innerText = "Payment Confirmed";
 
                 setTimeout(() => {
-                    window.location.href = "receipt.html";
+                    window.location.href = "recept.html";
                 }, 1500);
 
                 return;
@@ -451,6 +451,17 @@ console.log("User ID:", user.id);
 
 
 }
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
 </script>
 
 </body>
