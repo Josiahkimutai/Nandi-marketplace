@@ -407,8 +407,8 @@ function showError(message){
 }
 
 /* MARK OTHER PERSON'S MESSAGES AS READ */
-async function markAsRead(){
-  try{
+async function markAsRead() {
+  try {
     const { error } = await sb2
       .from("messages")
       .update({ is_read: true })
@@ -416,11 +416,16 @@ async function markAsRead(){
       .neq("sender_id", user.id)
       .eq("is_read", false);
 
-    if(error){
-      console.error("MARK AS READ ERROR:", error);
+    if (error) {
+      console.error(error);
+      return;
     }
-  }catch(err){
-    console.error("MARK AS READ CATCH:", err);
+
+    // Refresh inbox instantly
+    localStorage.setItem("refreshInbox", Date.now());
+
+  } catch (err) {
+    console.error(err);
   }
 }
 
@@ -574,22 +579,24 @@ window.addEventListener("DOMContentLoaded", () => {
 
 /* REALTIME (optional - if realtime fails, chat still works) */
 try{
-  sb2.channel("chat-live-" + chatId)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "messages",
-        filter: `conversation_id=eq.${chatId}`
-      },
-      async () => {
-        await loadMessages();
-      }
-    )
-    .subscribe((status) => {
-      console.log("Realtime status:", status);
-    });
+ const chatChannel = sb2
+  .channel("chat-live-" + chatId)
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "messages",
+      filter: `conversation_id=eq.${chatId}`
+    },
+    (payload) => {
+      console.log("Realtime message:", payload);
+      loadMessages();
+    }
+  )
+  .subscribe((status) => {
+    console.log("Realtime status:", status);
+  });
 }catch(err){
   console.warn("Realtime could not start:", err);
 }

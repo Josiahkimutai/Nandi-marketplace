@@ -165,7 +165,10 @@ const sb2 = supabase.createClient(
 );
 
 const user = JSON.parse(localStorage.getItem("agrihub_user"));
-
+const notificationSound = new Audio("sounds/message.mp3");
+notificationSound.preload = "auto";
+notificationSound.volume = 0.8;
+let lastMessageId = null;
 if(!user){
   window.location.href = "index.html";
 }
@@ -353,13 +356,36 @@ function openChat(chatId, otherUserId, realName){
 loadInbox();
 
 /* REALTIME REFRESH */
-sb2.channel('inbox-live')
+sb2.channel("inbox-live")
   .on(
-    'postgres_changes',
-    { event:'*', schema:'public', table:'messages' },
-    () => loadInbox()
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "messages"
+    },
+    (payload) => {
+
+      // Ignore messages you sent yourself
+      if (payload.new.sender_id != user.id) {
+
+        // Prevent duplicate sound
+        if (payload.new.id !== lastMessageId) {
+          lastMessageId = payload.new.id;
+
+          notificationSound.play().catch(err => {
+            console.log("Sound blocked:", err);
+          });
+        }
+      }
+
+      loadInbox();
+
+    }
   )
-  .subscribe();
+  .subscribe(status => {
+    console.log("Inbox realtime:", status);
+  });
 
 sb2.channel('conversations-live')
   .on(
@@ -390,6 +416,11 @@ function updatePresence() {
     })
     .eq("id", user.id);
 }
+window.addEventListener("storage", (e) => {
+  if (e.key === "refreshInbox") {
+    loadInbox();
+  }
+});
 
 // run immediately when page loads
 updatePresence();
