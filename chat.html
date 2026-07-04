@@ -405,6 +405,31 @@ function formatTime(dateString){
 function showError(message){
   chatBox.innerHTML = `<div class="empty-chat">${message}</div>`;
 }
+function appendMessage(m) {
+
+  // Remove "No messages yet" if it exists
+  const empty = chatBox.querySelector(".empty-chat");
+  if (empty) empty.remove();
+
+  const mine = String(m.sender_id) === String(user.id);
+
+  const row = document.createElement("div");
+  row.className = "msg-row " + (mine ? "me" : "other");
+
+  row.innerHTML = `
+    <div class="msg ${mine ? "me" : "other"}">
+      <div class="msg-text">${escapeHtml(m.message || "")}</div>
+      <div class="time">${formatTime(m.created_at)}</div>
+    </div>
+  `;
+
+  chatBox.appendChild(row);
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  if (!mine) {
+    markAsRead();
+  }
+}
 /* MARK OTHER PERSON'S MESSAGES AS READ */
 /* MARK OTHER PERSON'S MESSAGES AS READ */
 async function markAsRead() {
@@ -458,7 +483,9 @@ async function touchConversation(){
 
 /* LOAD MESSAGES */
 async function loadMessages(){
-  chatBox.innerHTML = `<div class="empty-chat">Loading messages...</div>`;
+  if (chatBox.children.length === 0) {
+    chatBox.innerHTML = `<div class="empty-chat">Loading messages...</div>`;
+}
 
   try{
     const { data, error } = await sb2
@@ -478,8 +505,12 @@ async function loadMessages(){
       return;
     }
 
-    chatBox.innerHTML = "";
+    chatBox.innerHTML = "";// If messages are already displayed, don't rebuild everything.
+if (chatBox.children.length > 0) {
+  return;
+}
 
+chatBox.innerHTML = "";
     if(!data || data.length === 0){
       chatBox.innerHTML = `<div class="empty-chat">No messages yet. Start the conversation.</div>`;
       return;
@@ -545,7 +576,12 @@ async function sendMessage(){
     msgInput.value = "";
     await setTyping(false);
     await touchConversation();
-    await loadMessages();
+    appendMessage({
+  id: Date.now(), // temporary id
+  sender_id: user.id,
+  message: text,
+  created_at: new Date().toISOString()
+});
 
   }catch(err){
     console.error("SEND MESSAGE CATCH:", err);
@@ -595,15 +631,23 @@ try{
   .on(
     "postgres_changes",
     {
-      event: "*",
+      event: "INSERT",
       schema: "public",
       table: "messages",
       filter: `conversation_id=eq.${chatId}`
     },
-    (payload) => {
-      console.log("Realtime message:", payload);
-      loadMessages();
-    }
+  (payload) => {
+
+  // Ignore duplicates
+  if (document.getElementById("msg-" + payload.new.id)) return;
+
+  appendMessage(payload.new);
+
+  // Mark received messages as read immediately
+  if (payload.new.sender_id !== user.id) {
+    markAsRead();
+  }
+}
   )
   .subscribe((status) => {
     console.log("Realtime status:", status);

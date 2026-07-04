@@ -137,7 +137,21 @@ color:white;
       margin-top:6px;
       line-height:1.5;
     }
+#imagePreview{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:10px;
+}
 
+#imagePreview div{
+    text-align:center;
+}
+
+#imagePreview img{
+    border-radius:8px;
+    border:1px solid #ddd;
+}
     .optional-badge{
       display:inline-block;
       margin-left:8px;
@@ -279,8 +293,6 @@ color:white;
 
 </div>
 
-<div id="dynamicForm"></div>
-
 </div>
 
 <div class="right-panel">
@@ -367,7 +379,7 @@ function renderForm() {
     const container = document.getElementById("dynamicForm");
 
     let html = `
-        <button onclick="backCategories()" style="margin-bottom:20px;">
+        <button type="button" onclick="backCategories()" style="margin-bottom:20px;">
             ← Back
         </button>
 
@@ -380,7 +392,7 @@ function renderForm() {
 
         <div class="form-group">
             <label>Price *</label>
-            <input id="price" type="number">
+           <input id="price" type="number" min="1">
         </div>
     `;
 
@@ -498,6 +510,10 @@ function cleanWhatsAppNumber(raw) {
     if (value.startsWith("+")) {
         value = value.substring(1);
     }
+
+    return value;
+}
+
 /* ================= GPS LOCATION ================= */
 
 function getCurrentLocation() {
@@ -533,10 +549,10 @@ function getCurrentLocation() {
     });
 
 }
-    return value;
+
     /* ================= GPS LOCATION ================= */
 
-}async function addProduct() {
+async function addProduct() {
 
     const btn = document.getElementById("postBtn");
 
@@ -558,9 +574,9 @@ function getCurrentLocation() {
 
         // ================= FORM VALUES =================
         const category = document.getElementById("category")?.value;
-        const name = document.getElementById("name")?.value;
+        const name = document.getElementById("name")?.value.trim();
         const price = document.getElementById("price")?.value;
-        const location = document.getElementById("location")?.value;
+        const location = document.getElementById("location")?.value.trim();
         const description = document.getElementById("description")?.value || "";
         const whatsapp = cleanWhatsAppNumber(document.getElementById("whatsapp")?.value);
 
@@ -591,31 +607,7 @@ try {
 
     btn.disabled = false;
     btn.innerText = "Post Product";
-
-    return;
-}function getCurrentLocation() {
-    return new Promise((resolve, reject) => {
-
-        navigator.geolocation.getCurrentPosition(
-
-            position => {
-
-                resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                });
-
-            },
-
-            error => reject(error),
-
-            {
-                enableHighAccuracy: true
-            }
-
-        );
-
-    });
+return;
 }
 
         // ================= MULTI IMAGE FIX =================
@@ -639,7 +631,7 @@ for (const file of files) {
 
     const { error: uploadError } = await sb.storage
         .from("product-images")
-        .upload(fileName, file);
+        .upload(`products/${fileName}`, file)
 
     if (uploadError) {
         console.error(uploadError);
@@ -715,7 +707,7 @@ window.addEventListener("beforeunload", () => {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  sb.from("users")
     .update({
       online: false,
       last_seen: new Date().toISOString()
@@ -726,7 +718,7 @@ function updatePresence() {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  sb.from("users")
     .update({
       online: true,
       last_seen: new Date().toISOString()
