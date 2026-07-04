@@ -169,6 +169,8 @@ const notificationSound = new Audio("sounds/message.mp3");
 notificationSound.preload = "auto";
 notificationSound.volume = 0.8;
 let lastMessageId = null;
+let inboxRendering = false;
+let inboxVersion = 0;
 if(!user){
   window.location.href = "index.html";
 }
@@ -283,80 +285,98 @@ function formatTime(dateString){
 }
 
 /* LOAD INBOX */
-async function loadInbox(){
+async function loadInbox() {
+  const myVersion = ++inboxVersion;
+
   const list = document.getElementById("list");
-  list.innerHTML = `<div class="loading">Loading...</div>`;
 
-  const { data, error } = await sb2
-    .from("conversations")
-    .select("*")
-    .or(`user1.eq.${user.id},user2.eq.${user.id}`)
-    .order("updated_at", { ascending:false });
+  if (inboxRendering) return; // block spam calls
+  inboxRendering = true;
 
-  if(error){
-    console.error("LOAD INBOX ERROR:", error);
-    list.innerHTML = `<div class="empty">Error loading messages</div>`;
-    return;
-  }
+  try {
+    const { data, error } = await sb2
+      .from("conversations")
+      .select("*")
+      .or(`user1.eq.${user.id},user2.eq.${user.id}`)
+      .order("updated_at", { ascending: false });
 
-  if(!data || data.length === 0){
-    list.innerHTML = `<div class="empty">No messages yet</div>`;
-    return;
-  }
+    if (error) {
+      console.error(error);
+      list.innerHTML = `<div class="empty">Error loading messages</div>`;
+      return;
+    }
 
-  list.innerHTML = "";
+    if (myVersion !== inboxVersion) return; // ⛔ outdated request
 
-  for(const c of data){
-    const otherUserId = getOtherUser(c);
+    if (!data || data.length === 0) {
+      list.innerHTML = `<div class="empty">No messages yet</div>`;
+      return;
+    }
 
-    const [realName, lastMsg, unreadCount] = await Promise.all([
-      getUserName(otherUserId),
-      getLastMessage(c.id),
-      getUnreadCount(c.id)
-    ]);
+    // IMPORTANT: build everything first (no flicker)
+    const fragments = [];
 
-    const initials = getInitials(realName);
+    for (const c of data) {
+      const otherUserId = getOtherUser(c);
 
-    const div = document.createElement("div");
-    div.className = "chat";
+      const [realName, lastMsg, unreadCount] = await Promise.all([
+        getUserName(otherUserId),
+        getLastMessage(c.id),
+        getUnreadCount(c.id)
+      ]);
 
-    div.innerHTML = `
-      <div class="avatar">${initials}</div>
+      const initials = getInitials(realName);
 
-      <div class="chat-content">
-        <div class="top-line">
-          <div class="name">${realName}</div>
-        </div>
+    fragments.push(`
+  <div class="chat" onclick="openChat('${c.id}', '${otherUserId}', '${realName.replace(/'/g, "\\'")}')">
 
-        <div class="last">
-          ${lastMsg ? lastMsg.message : "No messages yet"}
-        </div>
+    <div class="avatar">${initials}</div>
+
+    <div class="chat-content">
+      <div class="top-line">
+        <div class="name">${realName}</div>
       </div>
 
-      <div class="right-side">
-        <div class="time">${lastMsg ? formatTime(lastMsg.created_at) : ""}</div>
-        ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ``}
+      <div class="last">
+        ${lastMsg ? lastMsg.message : "No messages yet"}
       </div>
-    `;
+    </div>
 
-    div.onclick = () => openChat(c.id, otherUserId, realName);
-    list.appendChild(div);
+    <div class="right-side">
+      <div class="time">${lastMsg ? formatTime(lastMsg.created_at) : ""}</div>
+      ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ``}
+    </div>
+
+  </div>
+`);
+    }
+
+    if (myVersion !== inboxVersion) return;
+
+    // ⚡ ONE DOM UPDATE ONLY (no blinking)
+    list.innerHTML = fragments.join("");
+
+  } finally {
+    inboxRendering = false;
   }
 }
 
 /* OPEN CHAT */
-async function openChat(chatId, otherUserId, realName){
+async function openChat(chatId, otherUserId, realName) {
 
-  // Mark all received messages as read
-  await sb2
+  const { error } = await sb2
     .from("messages")
     .update({ is_read: true })
     .eq("conversation_id", chatId)
     .neq("sender_id", user.id)
     .eq("is_read", false);
 
-  // Refresh inbox immediately
-  loadInbox();
+  if (error) {
+    console.error("Failed to mark messages as read:", error);
+  }
+
+  // Refresh inbox locally
+  await loadInbox();
 
   localStorage.setItem("chat_id", chatId);
   localStorage.setItem("chat_user", otherUserId);
@@ -377,32 +397,28 @@ sb2.channel("inbox-live")
       schema: "public",
       table: "messages"
     },
-    (payload) => {
+   (payload) => {
 
-      // Ignore messages you sent yourself
-if (payload.new.sender_id !== user.id) {
+  if (payload.new.sender_id !== user.id) {
 
-  // Prevent duplicate processing
-  if (payload.new.id !== lastMessageId) {
-    lastMessageId = payload.new.id;
+    // update inbox first
+    clearTimeout(window.inboxTimeout);
+
+    window.inboxTimeout = setTimeout(async () => {
+      await loadInbox();   // wait UI update first
+
+      // THEN play sound
+      notificationSound.currentTime = 0;
+      notificationSound.play().catch(() => {});
+    }, 300);
   }
-
 }
-      loadInbox();
-
-    }
   )
   .subscribe(status => {
     console.log("Inbox realtime:", status);
   });
 
-sb2.channel('conversations-live')
-  .on(
-    'postgres_changes',
-    { event:'*', schema:'public', table:'conversations' },
-    () => loadInbox()
-  )
-  .subscribe();
+
   window.addEventListener("beforeunload", () => {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
@@ -435,13 +451,19 @@ window.addEventListener("storage", (e) => {
 updatePresence();
 
 // keep updating every 15 seconds
-setInterval(updatePresence, 15000);
+setInterval(updatePresence, 2000);
+document.addEventListener("click", () => {
+  notificationSound.play().then(() => {
+    notificationSound.pause();
+    notificationSound.currentTime = 0;
+  }).catch(() => {});
+}, { once: true });
 </script>
 <script src="tokenEngine.js"></script>
 <audio id="notificationSound" preload="auto">
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
 
-<script src="notifications.js"></script>
+
 </body>
 </html>
