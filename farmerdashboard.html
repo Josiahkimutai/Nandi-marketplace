@@ -1782,9 +1782,10 @@ const productsChannel = sb
 function showVerifiedPopup() {
 
     document.getElementById("verifiedPopup").style.display = "flex";
-    
 
-    const sound = document.getElementById("verifiedSound");
+    const sound = document.getElementById("notificationSound");
+
+    if (!sound) return;
 
     sound.currentTime = 0;
 
@@ -1793,6 +1794,8 @@ function showVerifiedPopup() {
     });
 
 }
+
+
 function closeVerifiedPopup() {
     document.getElementById("verifiedPopup").style.display = "none";
 }
