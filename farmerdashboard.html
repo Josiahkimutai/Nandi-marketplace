@@ -723,7 +723,83 @@ body{
 }
 </style>
 </head>
+<!-- VERIFIED SUCCESS POPUP -->
+<div id="verifiedPopup" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.55);
+justify-content:center;
+align-items:center;
+z-index:999999;
+">
 
+<div style="
+background:#fff;
+width:90%;
+max-width:340px;
+padding:25px;
+border-radius:18px;
+text-align:center;
+animation:pop .3s ease;
+">
+
+<div style="
+width:70px;
+height:70px;
+margin:auto;
+border-radius:50%;
+background:#dcfce7;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:36px;
+color:#16a34a;
+">
+✔
+</div>
+
+<h2 style="margin-top:15px;color:#15803d;">
+Congratulations!
+</h2>
+
+<p style="margin:12px 0;color:#555;">
+Your account has been successfully verified.
+You can now contact sellers, buyers and enjoy all AgriHub features.
+</p>
+
+<button onclick="closeVerifiedPopup()" style="
+background:#16a34a;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+width:100%;
+">
+Continue
+</button>
+
+</div>
+
+</div>
+
+<style>
+@keyframes pop{
+from{
+transform:scale(.7);
+opacity:0;
+}
+to{
+transform:scale(1);
+opacity:1;
+}
+}
+</style>
 <body>
 
 <!-- TOP BAR -->
@@ -916,7 +992,7 @@ window.addEventListener("beforeunload", () => {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  sb.from("users")
     .update({
       online: false,
       last_seen: new Date().toISOString()
@@ -1029,14 +1105,23 @@ async function loadVerification() {
   const status = (my?.status || "notverified").toLowerCase();
 
   // 🔥 SINGLE SOURCE OF TRUTH
-  isVerified = ["verified", "approved"].includes(status.toLowerCase());
+ // 🔥 SINGLE SOURCE OF TRUTH
+isVerified = ["verified", "approved"].includes(status.toLowerCase());
 
-  console.log("VERIFICATION STATUS:", status, "isVerified:", isVerified);
+console.log("VERIFICATION STATUS:", status, "isVerified:", isVerified);
 
-  updateVerificationUI(status);
+updateVerificationUI(status);
 
-  // refresh feed AFTER status is known
-  renderFeed(allProducts);
+// Show popup only once
+const verifiedKey = "verified_popup_" + user.id;
+
+if (isVerified && !localStorage.getItem(verifiedKey)) {
+    showVerifiedPopup();
+    localStorage.setItem(verifiedKey, "shown");
+}
+
+// refresh feed AFTER status is known
+renderFeed(allProducts);
 
 }
 
@@ -1555,19 +1640,7 @@ async function loadUnreadMessages() {
     console.error("Badge error:", err);
   }
 }
-sb.channel("messages-badge-live")
-  .on(
-    "postgres_changes",
-    {
-      event: "*",
-      schema: "public",
-      table: "messages"
-    },
-    () => {
-      loadUnreadMessages();
-    }
-  )
-  .subscribe();
+
   /* =========================
    AUTO HIDE BOTTOM NAV
 ========================= */
@@ -1706,6 +1779,63 @@ const productsChannel = sb
 
     console.log("OFFLINE SYNC DEDUCTED:", deduct);
 }
+function showVerifiedPopup() {
+
+    document.getElementById("verifiedPopup").style.display = "flex";
+    
+
+    const sound = document.getElementById("verifiedSound");
+
+    sound.currentTime = 0;
+
+    sound.play().catch(err => {
+        console.log("Audio blocked:", err);
+    });
+
+}
+function closeVerifiedPopup() {
+    document.getElementById("verifiedPopup").style.display = "none";
+}
+// ===============================
+// LIVE VERIFICATION LISTENER
+// ===============================
+const verificationChannel = sb
+  .channel("verification-live")
+  .on(
+    "postgres_changes",
+    {
+      event: "UPDATE",
+      schema: "public",
+      table: "verifications"
+    },
+    (payload) => {
+
+      // Ignore updates for other users
+      if (payload.new.user_id !== user.id) return;
+
+      const status = (payload.new.status || "").toLowerCase();
+
+      if (status === "approved") {
+
+        isVerified = true;
+
+        updateVerificationUI("approved");
+
+        // Prevent showing twice
+        const key = "verified_popup_" + user.id;
+
+        if (!localStorage.getItem(key)) {
+            localStorage.setItem(key, "shown");
+            showVerifiedPopup();
+        }
+
+      }
+
+    }
+  )
+  .subscribe((status) => {
+      console.log("Verification channel:", status);
+  });
 /* =========================
    INIT
 ========================= */
@@ -1738,7 +1868,7 @@ function updatePresence() {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  sb.from("users")
     .update({
       online: true,
       last_seen: new Date().toISOString()
@@ -1767,6 +1897,23 @@ async function logout() {
   localStorage.removeItem("agrihub_user");
   window.location.href = "index.html";
 }
+// Unlock notification sound after the first user interaction
+document.addEventListener("click", function unlockAudio() {
+
+    const sound = document.getElementById("notificationSound");
+
+    if (!sound) return;
+
+    sound.play()
+        .then(() => {
+            sound.pause();
+            sound.currentTime = 0;
+        })
+        .catch(() => {});
+
+    document.removeEventListener("click", unlockAudio);
+
+});
 </script>
 <!-- VERIFY POPUP -->
 <div id="verifyPopup" style="
@@ -1915,6 +2062,9 @@ Cancel
 </div>
 
 </div>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
 <script src="tokenEngine.js"></script>
 </body>
 </html>
