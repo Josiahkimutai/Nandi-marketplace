@@ -405,30 +405,41 @@ function formatTime(dateString){
 function showError(message){
   chatBox.innerHTML = `<div class="empty-chat">${message}</div>`;
 }
-
+/* MARK OTHER PERSON'S MESSAGES AS READ */
 /* MARK OTHER PERSON'S MESSAGES AS READ */
 async function markAsRead() {
-  try {
-    const { error } = await sb2
-      .from("messages")
-      .update({ is_read: true })
-      .eq("conversation_id", chatId)
-      .neq("sender_id", user.id)
-      .eq("is_read", false);
+
+    console.log("Current user:", user.id);
+    console.log("Conversation:", chatId);
+
+    // Show all unread messages first
+    const { data: unread } = await sb2
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", chatId)
+        .eq("is_read", false);
+
+    console.log("Unread messages:", unread);
+
+    const { data, error } = await sb2
+        .from("messages")
+        .update({
+            is_read: true
+        })
+        .eq("conversation_id", chatId)
+        .neq("sender_id", user.id)
+        .eq("is_read", false)
+        .select();
+
+    console.log("Rows updated:", data);
 
     if (error) {
-      console.error(error);
-      return;
+        console.error(error);
     }
-
-    // Refresh inbox instantly
-    localStorage.setItem("refreshInbox", Date.now());
-
-  } catch (err) {
-    console.error(err);
-  }
 }
-
+window.addEventListener("messagesUpdated", () => {
+    loadUnreadMessages();
+});
 /* UPDATE CONVERSATION TIME */
 async function touchConversation(){
   try{
@@ -687,5 +698,10 @@ async function setTyping(isTyping) {
 }
 </script>
 <script src="tokenEngine.js"></script>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+<script src="notifications.js"></script>
 </body>
 </html>

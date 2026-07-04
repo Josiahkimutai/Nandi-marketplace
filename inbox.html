@@ -345,10 +345,23 @@ async function loadInbox(){
 }
 
 /* OPEN CHAT */
-function openChat(chatId, otherUserId, realName){
+async function openChat(chatId, otherUserId, realName){
+
+  // Mark all received messages as read
+  await sb2
+    .from("messages")
+    .update({ is_read: true })
+    .eq("conversation_id", chatId)
+    .neq("sender_id", user.id)
+    .eq("is_read", false);
+
+  // Refresh inbox immediately
+  loadInbox();
+
   localStorage.setItem("chat_id", chatId);
   localStorage.setItem("chat_user", otherUserId);
   localStorage.setItem("chat_name", realName);
+
   window.location.href = "chat.html";
 }
 
@@ -367,18 +380,14 @@ sb2.channel("inbox-live")
     (payload) => {
 
       // Ignore messages you sent yourself
-      if (payload.new.sender_id != user.id) {
+if (payload.new.sender_id !== user.id) {
 
-        // Prevent duplicate sound
-        if (payload.new.id !== lastMessageId) {
-          lastMessageId = payload.new.id;
+  // Prevent duplicate processing
+  if (payload.new.id !== lastMessageId) {
+    lastMessageId = payload.new.id;
+  }
 
-          notificationSound.play().catch(err => {
-            console.log("Sound blocked:", err);
-          });
-        }
-      }
-
+}
       loadInbox();
 
     }
@@ -429,5 +438,10 @@ updatePresence();
 setInterval(updatePresence, 15000);
 </script>
 <script src="tokenEngine.js"></script>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+<script src="notifications.js"></script>
 </body>
 </html>

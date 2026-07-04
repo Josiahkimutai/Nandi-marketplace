@@ -20,6 +20,7 @@ body{
 
 /* TOP BAR (SQUEEZED) */
 .topbar{
+
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -798,10 +799,42 @@ to{
 transform:scale(1);
 opacity:1;
 }
+}.net-toast{
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+
+    padding: 10px 16px;
+    border-radius: 12px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    color: #fff;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: all .3s ease;
+}
+
+.net-toast.show{
+    opacity: 1;
+    top: 20px;
+}
+
+.net-toast.online{
+    background: #16a34a;
+}
+
+.net-toast.offline{
+    background: #dc2626;
 }
 </style>
 <body>
-
+<div id="netToast" class="net-toast"></div>
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">
@@ -810,9 +843,15 @@ opacity:1;
   </div>
 
   <div class="user-box">
-    <img id="userAvatar" src="https://i.pravatar.cc/100" />
+  <img id="userAvatar" src="https://i.pravatar.cc/100" />
+  
+  <div style="display:flex;flex-direction:column;line-height:1.1;">
     <span id="welcomeText">Welcome</span>
+
+    <!-- ONLINE INDICATOR HERE -->
+   
   </div>
+</div>
 </div>
 
 <!-- DASHBOARD -->
@@ -961,7 +1000,7 @@ const sb = supabase.createClient(
   "https://wfbepkegbtxszhhozqtz.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
 );
-
+const likeSound = new Audio("sounds/like.mp3");
 const user = JSON.parse(localStorage.getItem("agrihub_user") || "null");
 window.sb = sb;
 window.user = user;
@@ -1089,6 +1128,7 @@ function getCurrentUser() {
 
 let isVerified = false;
 let tokenBalance = 0;
+let cachedFeed = [];
 
 async function loadVerification() {
   const { data, error } = await sb
@@ -1162,7 +1202,8 @@ function updateVerificationUI(status) {
    FEED
 ========================= */
 async function loadFeed() {
-
+cachedFeed = allProducts.slice(0, 10); // keep latest 10 only
+localStorage.setItem("agrihub_cached_feed", JSON.stringify(cachedFeed));
   const { data, error } = await sb
     .from("products")
     .select("*")
@@ -1178,6 +1219,13 @@ async function loadFeed() {
   updateStats(allProducts);
   renderFeed(allProducts);
   updateListingsBadge(allProducts);
+  allProducts = data || [];
+
+cacheFeed(allProducts); // ✅ important fix
+
+updateStats(allProducts);
+renderFeed(allProducts);
+updateListingsBadge(allProducts);
 }
 function updateListingsBadge(products){
 
@@ -1194,6 +1242,39 @@ function updateListingsBadge(products){
         badge.style.display = "none";
     }
  
+}
+function loadOfflineFeed() {
+    const feed = document.getElementById("feed");
+
+    const cachedRaw = localStorage.getItem("agrihub_cached_feed");
+    const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+
+    if (!cached || !cached.data?.length) {
+        feed.innerHTML = `
+            <div style="padding:20px;text-align:center;color:#666;">
+                📡 No internet connection<br><br>
+                No cached posts available yet.
+            </div>
+        `;
+        return;
+    }
+
+    const ageMinutes = Math.floor((Date.now() - cached.time) / 60000);
+
+    feed.innerHTML = `
+        <div style="padding:10px;text-align:center;font-size:12px;color:#888;">
+            Showing saved feed (${ageMinutes} min old)
+        </div>
+    `;
+
+    renderFeed(cached.data);
+}async function smartLoadFeed() {
+    if (navigator.onLine) {
+        await loadFeed();        // fetch fresh data
+        cacheFeed(allProducts);  // then cache it
+    } else {
+        loadOfflineFeed();       // fallback
+    }
 }
 function updateStats(products){
 
@@ -1690,9 +1771,9 @@ function closeImageViewer(){
 
     document.getElementById("imageViewer").style.display = "none";
 
-}async function toggleLike(productId) {
+}
+async function toggleLike(productId) {
   try {
-    console.log("LIKE CLICKED:", productId);
 
     const product = allProducts.find(p => p.id === productId);
     if (!product) return;
@@ -1709,10 +1790,18 @@ function closeImageViewer(){
       return;
     }
 
+    // update local state
     product.likes = newLikes;
 
+    // update UI
     const el = document.getElementById(`like-${productId}`);
     if (el) el.innerText = newLikes;
+
+    // 🔥 PLAY SOUND HERE
+    likeSound.currentTime = 0;
+    likeSound.play().catch(err => {
+      console.log("Like sound blocked:", err);
+    });
 
   } catch (err) {
     console.error("Like error:", err);
@@ -1779,6 +1868,42 @@ const productsChannel = sb
 
     console.log("OFFLINE SYNC DEDUCTED:", deduct);
 }
+
+// ===============================
+// LIVE MESSAGE BADGE
+// ===============================
+const messagesChannel = sb
+  .channel("messages-live-dashboard")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "messages"
+    },
+    async (payload) => {
+
+      // reload unread badge
+      await loadUnreadMessages();
+
+      // play sound only for incoming messages
+      if (
+          payload.new &&
+          payload.new.sender_id !== user.id
+      ) {
+          const sound = document.getElementById("notificationSound");
+
+          if (sound) {
+              sound.currentTime = 0;
+              sound.play().catch(()=>{});
+          }
+      }
+
+    }
+  )
+  .subscribe(status=>{
+      console.log("Dashboard message channel:", status);
+  });
 function showVerifiedPopup() {
 
     document.getElementById("verifiedPopup").style.display = "flex";
@@ -1818,19 +1943,22 @@ const verificationChannel = sb
 
       const status = (payload.new.status || "").toLowerCase();
 
-      if (status === "approved") {
+     if (
+    status === "approved" ||
+    status === "verified"
+) {
 
         isVerified = true;
 
         updateVerificationUI("approved");
 
         // Prevent showing twice
-        const key = "verified_popup_" + user.id;
+       showVerifiedPopup();
 
-        if (!localStorage.getItem(key)) {
-            localStorage.setItem(key, "shown");
-            showVerifiedPopup();
-        }
+localStorage.setItem(
+    "verified_popup_" + user.id,
+    "shown"
+);
 
       }
 
@@ -1863,7 +1991,7 @@ function closeTokenPopup() {
     }catch(e){}
 
     await syncOfflineTokens();
-    await loadFeed();
+    await smartLoadFeed();
     await loadUnreadMessages();
 
 })();
@@ -1917,6 +2045,54 @@ document.addEventListener("click", function unlockAudio() {
     document.removeEventListener("click", unlockAudio);
 
 });
+window.addEventListener("messagesUpdated", () => {
+    loadUnreadMessages();
+});
+const netToast = document.getElementById("netToast");
+
+function showNetStatus(message, type) {
+    const netToast = document.getElementById("netToast");
+
+    if (!netToast) return;
+
+    netToast.innerText = message;
+    netToast.className = `net-toast show ${type}`;
+
+    clearTimeout(netToast._t);
+
+    netToast._t = setTimeout(() => {
+        netToast.classList.remove("show");
+    }, 3000);
+
+}window.addEventListener("offline", () => {
+    showNetStatus("You are offline", "offline");
+});
+
+window.addEventListener("online", () => {
+    showNetStatus("Back online", "online");
+});
+function checkInternet() {
+  if (!navigator.onLine) {
+    showNetStatus("You are offline", "offline");
+  }
+}
+window.addEventListener("online", async () => {
+    await loadFeed(); // refresh full feed when back online
+});
+
+window.addEventListener("offline", () => {
+    loadOfflineFeed(); // instantly switch to cached
+});
+// check every 5 seconds
+setInterval(checkInternet, 2000);
+function cacheFeed(products) {
+    const payload = {
+        time: Date.now(),
+        data: products
+    };
+
+    localStorage.setItem("agrihub_cached_feed", JSON.stringify(payload));
+}
 </script>
 <!-- VERIFY POPUP -->
 <div id="verifyPopup" style="
@@ -1968,6 +2144,7 @@ document.addEventListener("click", function unlockAudio() {
     </button>
   </div>
 </div><!-- IMAGE VIEWER -->
+
 <div id="imageViewer" style="
 display:none;
 position:fixed;
@@ -2069,5 +2246,10 @@ Cancel
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
 <script src="tokenEngine.js"></script>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+<script src="notifications.js"></script>
 </body>
 </html>
