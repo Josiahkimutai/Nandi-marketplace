@@ -1,0 +1,16 @@
+firebase-service-account.json
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# Android build files
+android/.gradle/
+android/app/build/
+
+# Android Studio
+android/.idea/
+
+# Logs
+*.log

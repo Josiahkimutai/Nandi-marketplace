@@ -1,3 +1,6 @@
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getMessaging } = require("firebase-admin/messaging");
+const serviceAccount = require("./firebase-service-account.json");
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
@@ -33,6 +36,59 @@ const supabase = createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
+/* ==========================================
+   FIREBASE ADMIN
+========================================== */
+
+initializeApp({
+  credential: cert(serviceAccount)
+});
+/* ==========================================
+   SEND PUSH NOTIFICATION
+========================================== */
+
+async function sendPushNotification(
+  token,
+  title,
+  body,
+  conversationId = "",
+  senderId = ""
+){
+
+  if (!token) {
+    console.log("No FCM token available.");
+    return;
+  }
+
+  try {
+
+ const message = {
+  token,
+  notification: {
+    title,
+    body
+  },
+  data: {
+    type: "chat",
+    conversationId: conversationId || "",
+    senderId: senderId || ""
+  },
+  android: {
+    priority: "high"
+  }
+};
+
+   const response = await getMessaging().send(message);
+
+    console.log("Push sent:", response);
+
+  } catch (err) {
+
+    console.error("Push notification error:", err.message);
+
+  }
+
+}
 
 /* ==========================================
    HOME
@@ -188,7 +244,7 @@ app.post("/stkpush", async (req, res) => {
 });/* ==========================================
    CALLBACK
 ========================================== */
-
+console.log("🔥 CALLBACK HIT");
 app.post("/callback", async (req, res) => {
 
   try {
@@ -248,6 +304,10 @@ app.post("/callback", async (req, res) => {
     }
 
     console.log("FOUND PAYMENT:", payment);
+    await supabase
+  .from("payments")
+  .update({ status: "PROCESSING" })
+  .eq("checkout_request_id", checkoutRequestID);
 
     /* --------------------------
        UPDATE PAYMENT
@@ -272,27 +332,24 @@ app.post("/callback", async (req, res) => {
     /* --------------------------
        LOAD USER
     --------------------------- */
+/* --------------------------
+   LOAD USER (ONLY ONCE)
+--------------------------- */
 
-    const { data: user } = await supabase
+const { data: user, error: userError } = await supabase
+  .from("users")
+  .select("token_balance, fcm_token")
+  .eq("id", payment.user_id)
+  .single();
 
-      .from("users")
+if (!user || userError) {
+  console.log("USER NOT FOUND");
 
-      .select("*")
-
-      .eq("id", payment.user_id)
-
-      .single();
-
-    if (!user) {
-
-      console.log("USER NOT FOUND");
-
-      return res.json({
-        ResultCode: 0,
-        ResultDesc: "Accepted"
-      });
-
-    }
+  return res.json({
+    ResultCode: 0,
+    ResultDesc: "Accepted"
+  });
+}
 
     const currentTokens =
       Number(user.token_balance || 0);
@@ -306,83 +363,95 @@ app.post("/callback", async (req, res) => {
 console.log("Tokens Purchased:", tokens);
 console.log("Current Balance:", currentTokens);
 console.log("New Balance:", newBalance);
+console.log("TOKENS CREDITED:", tokens);
+console.log("NEW BALANCE:", newBalance);
+
 
     /* --------------------------
        UPDATE USER WALLET
     --------------------------- */
-
-    await supabase
-
-      .from("users")
-
-      .update({
-
-        token_balance: newBalance,
-
-        subscription_active: true,
-
-        subscription_status: "ACTIVE",
-
-        last_payment_amount: amount,
-
-        last_payment_date:
-          new Date().toISOString()
-
-      })
-
-      .eq("id", payment.user_id);
-     const { data: updatedPayment, error: paymentUpdateError } = await supabase
-  .from("payments")
+console.log("STEP 1 - Updating user wallet");
+    const { error: walletError } = await supabase
+  .from("users")
   .update({
-    phone,
-    amount,
-    mpesa_receipt: receipt,
-    transaction_date: String(transactionDate),
-    result_code: resultCode,
-    result_desc: resultDesc,
-    message: resultDesc,
-    status: "SUCCESS",
-    tokens_purchased: tokens,
-    token_balance_after: newBalance,
-    payment_completed_at: new Date().toISOString()
+    token_balance: newBalance,
+    subscription_active: true,
+    subscription_status: "ACTIVE",
+    last_payment_amount: amount,
+    last_payment_date: new Date().toISOString()
   })
-  .eq("checkout_request_id", checkoutRequestID)
-  .select();
+  .eq("id", payment.user_id);
 
-console.log("UPDATED PAYMENT:", updatedPayment);
-console.log("PAYMENT UPDATE ERROR:", paymentUpdateError);
-if (paymentUpdateError) {
-  console.error("PAYMENT UPDATE ERROR:", paymentUpdateError);
+if (walletError) {
+  console.error("USER WALLET UPDATE ERROR:", walletError);
+
+  return res.json({
+    ResultCode: 0,
+    ResultDesc: "Accepted"
+  });
+}
+console.log("STEP 2 - User wallet updated successfully");
+    /* --------------------------
+       SEND PUSH NOTIFICATION
+    --------------------------- */
+console.log("STEP 3 - About to send push notification");
+  if (user.fcm_token) {
+  await sendPushNotification(
+    user.fcm_token,
+    "💰 Payment Successful",
+    `You have received ${tokens.toLocaleString()} AGRIHUB tokens.`
+  );
+
+  console.log("STEP 4 - sendPushNotification() finished");
+  console.log("📲 Push notification sent");
 } else {
-  console.log("UPDATED PAYMENT:", updatedPayment);
+  console.log("⚠️ No FCM token found");
 }
 
+    /* --------------------------
+       UPDATE PAYMENT RECORD
+    --------------------------- */
+console.log("STEP 5 - Updating payment record");
+    const { data: updatedPayment, error: paymentUpdateError } =
+      await supabase
+        .from("payments")
+        .update({
+          phone,
+          amount,
+          mpesa_receipt: receipt,
+          transaction_date: String(transactionDate),
+          result_code: resultCode,
+          result_desc: resultDesc,
+          message: resultDesc,
+          status: "SUCCESS",
+          tokens_purchased: tokens,
+          token_balance_after: newBalance,
+          payment_completed_at: new Date().toISOString()
+        })
+        .eq("checkout_request_id", checkoutRequestID)
+        .select();
+
+    if (paymentUpdateError) {
+      console.error("PAYMENT UPDATE ERROR:", paymentUpdateError);
+    } else {
+      console.log("UPDATED PAYMENT:", updatedPayment);
+    }
+
     return res.json({
-
       ResultCode: 0,
-
       ResultDesc: "Accepted"
-
     });
 
-  }
-
-  catch (err) {
-
-    console.log(err);
+  } catch (err) {
+    console.error(err);
 
     return res.json({
-
       ResultCode: 0,
-
       ResultDesc: "Accepted"
-
     });
-
   }
 
 });
-
 
 /* ==========================================
    PAYMENT STATUS
@@ -464,12 +533,55 @@ app.post("/login", async (req, res) => {
   });
 
 });
+console.log("🔥 /send-chat-notification endpoint reached");
+app.post("/send-chat-notification", async (req, res) => {
+  try {
+   const {
+    receiverId,
+    senderId,
+    conversationId,
+    senderName,
+    message
+} = req.body;
+console.log("CHAT NOTIFICATION REQUEST:", req.body);
+    if (!receiverId) {
+      return res.status(400).json({
+        success: false,
+        message: "receiverId required"
+      });
+    }
 
+    const { data: receiver, error } = await supabase
+      .from("users")
+      .select("fcm_token")
+      .eq("id", receiverId)
+      .single();
 
+    if (error || !receiver?.fcm_token) {
+      return res.json({
+        success: true,
+        message: "No FCM token"
+      });
+    }
+await sendPushNotification(
+    receiver.fcm_token,
+    senderName || "New Message",
+    message,
+    conversationId,
+    senderId
+);
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error("CHAT NOTIFICATION ERROR:", err);
+    return res.status(500).json({ success: false });
+  }
+});
 /* ==========================================
    START SERVER
 ========================================== */
-
+console.log("SERVER VERSION: CHAT NOTIFICATION ROUTE INSTALLED");
 app.listen(PORT, () => {
 
   console.log(

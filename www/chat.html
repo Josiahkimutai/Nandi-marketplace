@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat - AgriHub</title>
+ <meta charset="UTF-8" />
+  <title>AGRIHUB</title>
+<meta http-equiv="Content-Security-Policy"
+content="
+default-src 'self';
+script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline';
+connect-src 'self' https://mpesa-backend-k7ly.onrender.com https://wfbepkegbtxszhhozqtz.supabase.co wss://wfbepkegbtxszhhozqtz.supabase.co;
+style-src 'self' 'unsafe-inline';
+">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -550,14 +556,17 @@ async function sendMessage(){
   sendBtn.textContent = "Sending...";
 
   try{
-    const { error } = await sb2
-      .from("messages")
-      .insert([{
-        conversation_id: chatId,
-        sender_id: user.id,
-        message: text,
-        is_read: false
-      }]);
+ const { data: insertedMessage, error } = await sb2
+  .from("messages")
+  .insert([{
+    conversation_id: chatId,
+    sender_id: user.id,
+    receiver_id: chatUser,
+    message: text,
+    is_read: false
+  }])
+  .select()
+  .single();
 
     if(error){
       console.error("SEND MESSAGE ERROR:", error);
@@ -574,6 +583,19 @@ async function sendMessage(){
     }
 
     msgInput.value = "";
+    await fetch("https://mpesa-backend-k7ly.onrender.com/send-chat-notification", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+ body: JSON.stringify({
+    receiverId: chatUser,
+    senderId: user.id,
+    conversationId: chatId,
+    senderName: user.name || user.full_name || "AgriHub User",
+    message: text
+})
+});
     await setTyping(false);
     await touchConversation();
     appendMessage({
@@ -741,7 +763,6 @@ async function setTyping(isTyping) {
   }
 }
 </script>
-<script src="tokenEngine.js"></script>
 <audio id="notificationSound" preload="auto">
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
