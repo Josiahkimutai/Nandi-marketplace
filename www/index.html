@@ -425,7 +425,28 @@ localStorage.setItem(
     "agrihub_user",
     JSON.stringify(data)
 );
+localStorage.setItem("agrihub_user", JSON.stringify(data));
 
+// 🔥 IMPORTANT: trigger pending FCM sync
+const pending = localStorage.getItem("pending_fcm_token");
+
+console.log("Pending token:", pending);
+
+if (pending) {
+    console.log("Syncing FCM token for user:", data.id);
+
+    const { error } = await sb
+        .from("users")
+        .update({ fcm_token: pending })
+        .eq("id", data.id);
+
+    console.log("Sync result:", error);
+
+    if (!error) {
+        localStorage.removeItem("pending_fcm_token");
+        console.log("FCM sync complete");
+    }
+}
 showMessage("✔ Login Successful", true);
 
 setTimeout(() => {

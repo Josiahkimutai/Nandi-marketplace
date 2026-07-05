@@ -78,9 +78,14 @@ async function sendPushNotification(
   }
 };
 
-   const response = await getMessaging().send(message);
-
-    console.log("Push sent:", response);
+try {
+  const response = await getMessaging().send(message);
+  console.log("✅ Push sent:", response);
+} catch (err) {
+  console.error("❌ Firebase Error Code:", err.code);
+  console.error("❌ Firebase Error:", err.message);
+  console.error(err);
+}
 
   } catch (err) {
 
