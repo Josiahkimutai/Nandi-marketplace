@@ -1,17 +1,25 @@
+
+require("dotenv").config();
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const { readID } = require("./ai/ocr");
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getMessaging } = require("firebase-admin/messaging");
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const serviceAccount = require("./firebase-service-account.json");
+
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
-require("dotenv").config();
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+const upload = multer({
+  dest: "uploads/"
+});
 const PORT = process.env.PORT || 5000;
 
 /* ==========================================
@@ -42,8 +50,7 @@ const supabase = createClient(
 
 initializeApp({
   credential: cert(serviceAccount)
-});
-/* ==========================================
+});/* ==========================================
    SEND PUSH NOTIFICATION
 ========================================== */
 
@@ -53,48 +60,65 @@ async function sendPushNotification(
   body,
   conversationId = "",
   senderId = ""
-){
+) {
 
-  if (!token) {
-    console.log("No FCM token available.");
-    return;
-  }
+    console.log("==================================");
+    console.log("TIME:", new Date().toISOString());
+    console.log("SENDING PUSH");
+    console.log("Token:", token);
+    console.log("Title:", title);
+    console.log("Body:", body);
 
-  try {
+    const message = {
+        token,
+        notification: {
+            title,
+            body
+        },
+        data: {
+            type: "chat",
+            conversationId,
+            senderId
+        },
+        android: {
+            priority: "high",
+            notification: {
+                channelId: "default",
+                priority: "high",
+                defaultSound: true
+            }
+        }
+    };
 
- const message = {
-  token,
-  notification: {
-    title,
-    body
-  },
-  data: {
-    type: "chat",
-    conversationId: conversationId || "",
-    senderId: senderId || ""
-  },
-  android: {
-    priority: "high"
-  }
-};
+    console.log("Firebase Payload:");
+    console.log(JSON.stringify(message, null, 2));
 
-try {
-  const response = await getMessaging().send(message);
-  console.log("✅ Push sent:", response);
-} catch (err) {
-  console.error("❌ Firebase Error Code:", err.code);
-  console.error("❌ Firebase Error:", err.message);
-  console.error(err);
+    const start = Date.now();
+
+    try {
+
+        const response = await getMessaging().send(message);
+
+        console.log("✅ SUCCESS");
+        console.log("Firebase Message ID:", response);
+        console.log("Send took:", Date.now() - start, "ms");
+        console.log("TIME:", new Date().toISOString());
+
+    } catch (err) {
+
+        console.log("❌ FAILED");
+        console.log("Code:", err.code);
+        console.log("Message:", err.message);
+
+        if (err.errorInfo) {
+            console.log(err.errorInfo);
+        }
+
+        console.log(err);
+    }
+
+    console.log("==================================");
 }
-
-  } catch (err) {
-
-    console.error("Push notification error:", err.message);
-
-  }
-
-}
-
 /* ==========================================
    HOME
 ========================================== */
@@ -586,7 +610,82 @@ await sendPushNotification(
 /* ==========================================
    START SERVER
 ========================================== */
-console.log("SERVER VERSION: CHAT NOTIFICATION ROUTE INSTALLED");
+console.log("SERVER VERSION: CHAT NOTIFICATION ROUTE INSTALLED");app.post("/verify-id", upload.single("idImage"), async (req, res) => {
+
+    try {
+
+        const userId = req.body.userId;
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "No image uploaded"
+            });
+        }
+
+        const result = await readID(req.file.path);
+
+        console.log(result.text);
+        console.log("Confidence:", result.confidence);
+const text = result.text.toUpperCase();
+
+// Find the user
+const { data: user, error } = await supabase
+    .from("users")
+    .select("full_name,id_number")
+    .eq("id", userId)
+    .single();
+
+if (error || !user) {
+    fs.unlinkSync(req.file.path);
+
+    return res.status(404).json({
+        success: false,
+        message: "User not found"
+    });
+}
+
+// Clean database values
+const dbName = user.full_name.toUpperCase().trim();
+const dbId = String(user.id_number).replace(/\D/g, "");
+
+// Does OCR text contain the database values?
+const nameMatch = text.includes(dbName);
+const idMatch = text.includes(dbId);
+if (nameMatch && idMatch) {
+
+    await supabase
+        .from("users")
+        .update({
+            verification_status: "verified"
+        })
+        .eq("id", userId);
+
+}
+fs.unlinkSync(req.file.path);
+
+res.json({
+    success: true,
+    verified: nameMatch && idMatch,
+    nameMatch,
+    idMatch,
+    confidence: result.confidence
+});
+   
+
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
 app.listen(PORT, () => {
 
   console.log(
