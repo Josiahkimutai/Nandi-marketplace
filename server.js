@@ -649,8 +649,13 @@ const dbName = user.full_name.toUpperCase().trim();
 const dbId = String(user.id_number).replace(/\D/g, "");
 
 // Does OCR text contain the database values?
-const nameMatch = text.includes(dbName);
+const nameMatch = dbName
+    .split(" ")
+    .every(word => text.includes(word.substring(0,4)));
+
 const idMatch = text.includes(dbId);
+
+const confidenceOK = result.confidence >= 25;
 if (
  nameMatch &&
  idMatch &&
@@ -669,7 +674,7 @@ fs.unlinkSync(req.file.path);
 
 res.json({
     success: true,
-    verified: nameMatch && idMatch,
+    verified: nameMatch && idMatch && confidenceOK,
     nameMatch,
     idMatch,
     confidence: result.confidence
