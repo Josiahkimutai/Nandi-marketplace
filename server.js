@@ -613,15 +613,16 @@ console.log("SERVER VERSION: CHAT NOTIFICATION ROUTE INSTALLED");app.post("/veri
 
         const userId = req.body.userId;
 
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: "No image uploaded"
-            });
-        }
+      if (!req.file) {
+    console.log("NO FILE RECEIVED");
+    return res.status(400).json({
+        success: false,
+        message: "No image uploaded"
+    });
+}
 
         const result = await readID(req.file.path);
-
+console.log("OCR RESULT:", result);
         console.log(result.text);
         console.log("Confidence:", result.confidence);
 const text = result.text.toUpperCase();
@@ -634,6 +635,7 @@ const { data: user, error } = await supabase
     .single();
 
 if (error || !user) {
+  console.log("USER FROM DATABASE:", user);
     fs.unlinkSync(req.file.path);
 
     return res.status(404).json({
