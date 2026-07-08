@@ -1,12 +1,16 @@
 const Tesseract = require("tesseract.js");
 
 async function readID(image) {
+
   const { data } = await Tesseract.recognize(
     image,
     "eng"
   );
 
-  return data.text;
+  return {
+    text: data.text || "",
+    confidence: data.confidence || 0
+  };
 }
 
 module.exports = {
