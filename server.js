@@ -654,7 +654,10 @@ const nameMatch = dbName
     .every(word => text.includes(word.substring(0,4)));
 
 const idMatch = text.includes(dbId);
-
+console.log("DATABASE NAME:", dbName);
+console.log("DATABASE ID:", dbId);
+console.log("NAME MATCH:", nameMatch);
+console.log("ID MATCH:", idMatch);
 const confidenceOK = result.confidence >= 25;
 if (
  nameMatch &&
