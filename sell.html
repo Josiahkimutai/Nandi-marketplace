@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nandi AgriHub | Sell Product</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, sans-serif;
+    }
+.category-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:15px;
+margin:20px 0;
+}
+
+.category-card{
+background:#fff;
+border:2px solid #ddd;
+border-radius:15px;
+padding:20px;
+text-align:center;
+cursor:pointer;
+transition:.3s;
+font-size:35px;
+font-weight:bold;
+}
+
+.category-card span{
+display:block;
+margin-top:10px;
+font-size:14px;
+color:#333;
+}
+
+.category-card:hover{
+transform:translateY(-5px);
+border-color:#1f8f4e;
+box-shadow:0 10px 20px rgba(0,0,0,.15);
+}
+
+.category-card.active{
+background:#1f8f4e;
+color:white;
+border-color:#1f8f4e;
+}
+
+.category-card.active span{
+color:white;
+}
+    body{
+      min-height:100vh;
+      background:linear-gradient(135deg,#0f172a,#1f8f4e);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:20px;
+    }
+    .card{
+      width:100%;
+      max-width:560px;
+      background:#fff;
+      border-radius:22px;
+      padding:28px;
+      box-shadow:0 20px 50px rgba(0,0,0,0.28);
+    }
+
+    h2{
+      text-align:center;
+      margin-bottom:8px;
+      color:#111827;
+    }
+
+    .subtitle{
+      text-align:center;
+      color:#6b7280;
+      margin-bottom:22px;
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .user-box{
+      background:#f0fdf4;
+      border:1px solid #bbf7d0;
+      color:#166534;
+      padding:12px 14px;
+      border-radius:12px;
+      margin-bottom:18px;
+      font-size:14px;
+      font-weight:700;
+      text-align:center;
+    }
+
+    .form-group{
+      margin-bottom:14px;
+    }
+
+    label{
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+      font-weight:700;
+      color:#374151;
+    }
+
+    input, textarea{
+      width:100%;
+      padding:13px 14px;
+      border:1px solid #d1d5db;
+      border-radius:12px;
+      outline:none;
+      font-size:15px;
+      background:#fff;
+    }
+
+    textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    input:focus,
+    textarea:focus{
+      border-color:#1f8f4e;
+      box-shadow:0 0 0 3px rgba(31,143,78,0.12);
+    }
+
+    .file-note{
+      font-size:12px;
+      color:#6b7280;
+      margin-top:6px;
+      line-height:1.5;
+    }
+#imagePreview{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:10px;
+}
+
+#imagePreview div{
+    text-align:center;
+}
+
+#imagePreview img{
+    border-radius:8px;
+    border:1px solid #ddd;
+}
+    .optional-badge{
+      display:inline-block;
+      margin-left:8px;
+      font-size:11px;
+      font-weight:700;
+      color:#475467;
+      background:#eef2f6;
+      border:1px solid #dde3ea;
+      padding:2px 8px;
+      border-radius:999px;
+      vertical-align:middle;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      background:#1f8f4e;
+      color:white;
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    button:hover{
+      background:#16693a;
+    }
+
+    button:disabled{
+      opacity:.7;
+      cursor:not-allowed;
+    }
+
+    .msg{
+      display:none;
+      margin-top:14px;
+      padding:12px;
+      border-radius:12px;
+      text-align:center;
+      font-size:14px;
+      font-weight:700;
+      line-height:1.5;
+    }
+
+    .success{
+      background:#dcfce7;
+      color:#166534;
+      border:1px solid #bbf7d0;
+    }
+
+    .error{
+      background:#fee2e2;
+      color:#991b1b;
+      border:1px solid #fecaca;
+    }
+
+    .back-link{
+      display:block;
+      text-align:center;
+      margin-top:16px;
+      color:#1f8f4e;
+      text-decoration:none;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .back-link:hover{
+      text-decoration:underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+
+    <h2>🌾 Sell Your Product</h2>
+
+    <p class="subtitle">
+        Select a category first. The form will automatically change depending on what you're selling.
+    </p>
+
+    <div class="user-box" id="sellerBox">
+        Logged in as: Loading...
+    </div>
+
+<!-- CATEGORY FIRST -->
+<div class="form-group">
+
+
+<input type="hidden" id="category">
+
+<div id="categorySection">
+
+<div class="category-grid">
+
+<div class="category-card" onclick="selectCategory('agriculture',this)">
+🌾
+<span>Agriculture</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('vehicles',this)">
+🚗
+<span>Vehicles</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('property',this)">
+🏡
+<span>Property</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('electronics',this)">
+💻
+<span>Electronics</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('fashion',this)">
+👕
+<span>Fashion</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('home',this)">
+🛋
+<span>Home</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('services',this)">
+🛠
+<span>Services</span>
+</div>
+
+<div class="category-card" onclick="selectCategory('others',this)">
+📦
+<span>Others</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="right-panel">
+    <!-- DYNAMIC FORM -->
+    <div id="dynamicForm">
+    <div style="text-align:center;padding:40px;color:#888;">
+        Select a category to start.
+    </div>
+</div>
+    <button id="postBtn" onclick="addProduct()">
+        Post Product
+    </button>
+
+    <div id="msg" class="msg"></div>
+
+    <a class="back-link" href="farmerdashboard.html">
+        ← Back to Dashboard
+    </a>
+</div>
+</div>
+<script src="auth.js"></script>
+<script>
+  protectPage();
+</script>
+<script>
+const SUPABASE_URL = "https://wfbepkegbtxszhhozqtz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc";
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ================= USER ================= */
+function getCurrentUser() {
+    try {
+        const raw = localStorage.getItem("agrihub_user");
+        if (!raw || raw === "null") return null;
+
+        const user = JSON.parse(raw);
+        if (!user?.id) return null;
+
+        return user;
+
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+}
+
+let currentUser = getCurrentUser();
+
+if (!currentUser) {
+    alert("Session expired");
+    window.location.href = "index.html";
+}
+
+document.getElementById("sellerBox").innerText =
+    "Logged in as: " + (currentUser.full_name || "Farmer");
+
+/* ================= GLOBAL IMAGE STORE (FIX) ================= */
+let selectedImages = [];
+
+/* ================= CATEGORY ================= */
+function selectCategory(category, element) {
+
+    document.getElementById("category").value = category;
+
+    document.querySelectorAll(".category-card")
+        .forEach(c => c.classList.remove("active"));
+
+    element.classList.add("active");
+
+    document.getElementById("categorySection").style.display = "none";
+
+    renderForm();
+}
+
+function backCategories() {
+    selectedImages = [];
+
+    document.getElementById("dynamicForm").innerHTML = "";
+    document.getElementById("categorySection").style.display = "block";
+    document.getElementById("category").value = "";
+}
+
+/* ================= RENDER FORM ================= */
+function renderForm() {
+
+    const category = document.getElementById("category").value;
+    const container = document.getElementById("dynamicForm");
+
+    let html = `
+        <button type="button" onclick="backCategories()" style="margin-bottom:20px;">
+            ← Back
+        </button>
+
+        <h2>${category.toUpperCase()}</h2>
+
+        <div class="form-group">
+            <label>Product Name *</label>
+            <input id="name">
+        </div>
+
+        <div class="form-group">
+            <label>Price *</label>
+           <input id="price" type="number" min="1">
+        </div>
+    `;
+
+    html += `
+        <div class="form-group">
+            <label>Location *</label>
+            <input id="location">
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="description"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>WhatsApp</label>
+            <input id="whatsapp">
+        </div>
+
+        <div class="form-group">
+            <label>Images (max 7)</label>
+
+            <input type="file" id="images" accept="image/*" multiple>
+
+            <p id="imageCount">0 / 7 selected</p>
+
+            <div id="imagePreview"></div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+/* ================= IMAGE FIX (IMPORTANT) ================= */
+document.addEventListener("change", function (e) {
+
+    if (e.target && e.target.id === "images") {
+
+        const files = Array.from(e.target.files);
+
+        files.forEach(file => {
+            if (selectedImages.length < 7) {
+                selectedImages.push(file);
+            }
+        });
+
+        renderImages();
+    }
+});
+
+/* ================= IMAGE PREVIEW ================= */
+function renderImages() {
+
+    const preview = document.getElementById("imagePreview");
+    const counter = document.getElementById("imageCount");
+
+    preview.innerHTML = "";
+
+    counter.innerText = `${selectedImages.length} / 7 selected`;
+
+    selectedImages.forEach((file, i) => {
+
+        const div = document.createElement("div");
+
+        const img = document.createElement("img");
+        img.style.width = "90px";
+        img.style.height = "90px";
+        img.style.objectFit = "cover";
+
+        const label = document.createElement("div");
+        label.innerText = `${i + 1}. ${file.name}`;
+
+        const reader = new FileReader();
+        reader.onload = e => img.src = e.target.result;
+        reader.readAsDataURL(file);
+
+        div.appendChild(img);
+        div.appendChild(label);
+
+        preview.appendChild(div);
+    });
+}
+function showMsg(text, type) {
+    const msg = document.getElementById("msg");
+
+    if (!msg) {
+        console.error("Message box (#msg) not found");
+        return;
+    }
+
+    msg.style.display = "block";
+    msg.className = "msg " + type;
+    msg.innerText = text;
+}function clearMsg() {
+    const msg = document.getElementById("msg");
+
+    if (!msg) return;
+
+    msg.style.display = "none";
+    msg.className = "msg";
+    msg.innerText = "";
+}
+function cleanWhatsAppNumber(raw) {
+
+    if (!raw) return null;
+
+    let value = raw.trim();
+
+    value = value.replace(/[^\d+]/g, "");
+
+    if (value.startsWith("0")) {
+        value = "254" + value.slice(1);
+    }
+
+    if (value.startsWith("+")) {
+        value = value.substring(1);
+    }
+
+    return value;
+}
+
+/* ================= GPS LOCATION ================= */
+
+function getCurrentLocation() {
+
+    return new Promise((resolve, reject) => {
+
+        if (!navigator.geolocation) {
+            reject("Geolocation not supported");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+
+            position => {
+
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                });
+
+            },
+
+            error => reject(error),
+
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+
+        );
+
+    });
+
+}
+
+    /* ================= GPS LOCATION ================= */
+
+async function addProduct() {
+
+    const btn = document.getElementById("postBtn");
+
+    try {
+
+        btn.disabled = true;
+        btn.innerText = "Posting...";
+
+        clearMsg();
+
+        // ================= USER =================
+        const user = currentUser;
+
+        if (!user) {
+            alert("Session expired. Please login again.");
+            window.location.href = "index.html";
+            return;
+        }
+
+        // ================= FORM VALUES =================
+        const category = document.getElementById("category")?.value;
+        const name = document.getElementById("name")?.value.trim();
+        const price = document.getElementById("price")?.value;
+        const location = document.getElementById("location")?.value.trim();
+        const description = document.getElementById("description")?.value || "";
+        const whatsapp = cleanWhatsAppNumber(document.getElementById("whatsapp")?.value);
+
+        if (!category || !name || !price || !location) {
+            showMsg("Please fill all required fields (*)", "error");
+            btn.disabled = false;
+            btn.innerText = "Post Product";
+            return;
+        }// ================= GET GPS LOCATION =================
+let latitude = null;
+let longitude = null;
+
+try {
+
+    const gps = await getCurrentLocation();
+
+    latitude = gps.latitude;
+    longitude = gps.longitude;
+
+    console.log("Latitude:", latitude);
+    console.log("Longitude:", longitude);
+
+} catch (error) {
+
+    console.error(error);
+
+    showMsg("Please allow location access to post your product.", "error");
+
+    btn.disabled = false;
+    btn.innerText = "Post Product";
+return;
+}
+
+        // ================= MULTI IMAGE FIX =================
+       // ================= MULTI IMAGE FIX =================
+let image_urls = [];
+
+// Use ALL selected images, not just the current file input
+const files = selectedImages;
+
+if (files.length > 7) {
+    showMsg("Maximum 7 images allowed", "error");
+    btn.disabled = false;
+    btn.innerText = "Post Product";
+    return;
+}
+for (const file of files) {
+
+    const ext = file.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${ext}`;
+    const filePath = `products/${fileName}`;
+
+    // Upload image
+    const { error: uploadError } = await sb.storage
+        .from("product-images")
+        .upload(filePath, file);
+
+    if (uploadError) {
+        console.error(uploadError);
+        showMsg("Image upload failed", "error");
+        btn.disabled = false;
+        btn.innerText = "Post Product";
+        return;
+    }
+
+    // Get the correct public URL
+    const { data } = sb.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+    image_urls.push(data.publicUrl);
+}
+        // ================= SAVE PRODUCT =================
+  const { error: insertError } = await sb
+.from("products")
+.insert([{
+    user_id: user.id,
+    seller_name: user.full_name || "Farmer",
+    category,
+    name,
+    price,
+    location,
+    description,
+    whatsapp_number: whatsapp,
+    image_urls,
+
+    latitude,
+    longitude,
+
+    created_at: new Date().toISOString()
+}]);
+        if (insertError) {
+            console.error(insertError);
+            showMsg("Failed to post product", "error");
+            return;
+        }
+
+        // ================= SUCCESS =================
+        showMsg("Product posted successfully!", "success");
+
+        // RESET CLEANLY (IMPORTANT FIX)
+        selectedImages = [];
+
+const fileInput = document.getElementById("images");
+if (fileInput) fileInput.value = "";
+
+        const preview = document.getElementById("imagePreview");
+        if (preview) preview.innerHTML = "";
+
+        const counter = document.getElementById("imageCount");
+        if (counter) counter.innerText = "0 / 7 selected";
+
+        document.getElementById("dynamicForm").innerHTML = "";
+
+        // redirect FIXED
+        setTimeout(() => {
+            window.location.href = "farmerdashboard.html";
+        }, 1200);
+
+    } catch (err) {
+        console.error(err);
+        showMsg("Unexpected error occurred", "error");
+
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Post Product";
+    }
+}
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
+async function updatePresence() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  const { error } = await sb
+    .from("users")
+    .update({
+      online: true,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Presence update failed:", error);
+  } else {
+    console.log("Presence updated successfully");
+  }
+}
+
+updatePresence();
+setInterval(updatePresence, 3000);
+</script>
+<script src="tokenEngine.js"></script>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+<script src="notifications.js"></script><script src="js/native.js"></script>
+</body>
+</html>

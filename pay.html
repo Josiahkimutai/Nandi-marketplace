@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AGRIHUB - M-Pesa Payment</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    background:
+        radial-gradient(circle at top left, rgba(0,166,81,0.15), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(0,86,210,0.15), transparent 35%),
+        linear-gradient(135deg,#f6f9ff,#eef5ff);
+}
+
+.card{
+    width:100%;
+    max-width:430px;
+    background:rgba(255,255,255,0.96);
+    border-radius:22px;
+    padding:32px 28px;
+    box-shadow:0 18px 45px rgba(14, 9, 9, 0.12);
+    text-align:center;
+}
+
+h1{
+    color:#0f172a;
+    margin-bottom:10px;
+    font-size:28px;
+}
+
+h1 span{
+    color:#0056d2;
+}
+
+.subtitle{
+    color:#64748b;
+    margin-bottom:25px;
+    font-size:15px;
+    line-height:1.6;
+}
+
+.amount-box{
+    background:linear-gradient(135deg,#f3f8ff,#e9f3ff);
+    border:1px solid #dbeafe;
+    padding:22px;
+    border-radius:16px;
+    margin-bottom:25px;
+}
+
+.amount-label{
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:8px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+}
+
+.amount{
+    font-size:30px;
+    font-weight:800;
+    color:#0056d2;
+}
+
+.amount-note{
+    margin-top:8px;
+    font-size:14px;
+    color:#475569;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:14px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.pay-btn{
+    background:linear-gradient(135deg,#00a651,#007a3d);
+    color:white;
+}
+
+.pay-btn:hover{
+    transform:translateY(-2px);
+}
+
+.pay-btn:disabled{
+    opacity:0.65;
+    cursor:not-allowed;
+    transform:none;
+}
+
+.resend-btn{
+    margin-top:12px;
+    background:#eef2ff;
+    color:#1e3a8a;
+    border:1px solid #dbeafe;
+}
+
+.resend-btn:hover{
+    background:#e5edff;
+    transform:translateY(-2px);
+}
+
+.status{
+    margin-top:16px;
+    min-height:22px;
+    font-size:14px;
+    font-weight:600;
+}
+
+.status.success{ color:#15803d; }
+.status.error{ color:#dc2626; }
+.status.info{ color:#0056d2; }
+
+.note{
+    margin-top:18px;
+    font-size:13px;
+    color:#64748b;
+    line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+    <h1>Hello <span id="name">Customer</span></h1>
+
+ <p class="subtitle">
+    Enter the phone number to receive the M-Pesa prompt and the amount you want to pay.
+</p>
+
+<input
+    type="tel"
+    id="phone"
+    placeholder="07XXXXXXXX"
+    style="
+        width:100%;
+        padding:15px;
+        margin-bottom:15px;
+        border:2px solid #dbeafe;
+        border-radius:12px;
+        font-size:16px;
+    ">
+
+<div class="amount-box">
+
+    <div class="amount-label">
+        Amount
+    </div>
+
+    <input
+        type="number"
+        id="amount"
+        placeholder="Enter amount"
+        min="1"
+        style="
+            width:100%;
+            padding:15px;
+            font-size:28px;
+            text-align:center;
+            border:2px solid #dbeafe;
+            border-radius:12px;
+            font-weight:bold;
+        ">
+
+<div class="amount-note">
+    An M-Pesa prompt will be sent instantly to the phone number above.
+</div>
+
+<div class="amount-note">
+    1 KES = 1000 AGRI tokens
+</div>
+</div>
+
+    <button id="payBtn" class="pay-btn" onclick="pay()">
+        Pay with M-Pesa
+    </button>
+
+    <button id="resendBtn" class="resend-btn" onclick="pay()" style="display:none;">
+        Resend Prompt
+    </button>
+
+    <div id="status" class="status"></div>
+
+    <div class="note">
+        Make sure your phone is nearby and has enough balance to complete payment.
+    </div>
+
+</div>
+<script src="auth.js"></script>
+<script>
+  protectPage();
+</script>
+<script>
+const API = "https://mpesa-backend-k7ly.onrender.com";
+
+const sb = supabase.createClient(
+    "https://wfbepkegbtxszhhozqtz.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
+);
+
+const user = JSON.parse(localStorage.getItem("agrihub_user"));
+
+let name = "Customer";
+
+async function loadUser() {
+
+    if (!user) return;
+
+    const { data } = await sb
+        .from("users")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+    if (data) {
+        name = data.full_name;
+        document.getElementById("name").innerText = name;
+    }
+}
+
+loadUser();
+
+const nameEl = document.getElementById("name");
+const payBtn = document.getElementById("payBtn");
+const resendBtn = document.getElementById("resendBtn");
+const statusEl = document.getElementById("status");
+
+nameEl.innerText = name;
+
+let paymentInterval = null;
+let pollingStartedAt = null;
+const POLL_INTERVAL = 3000;
+const POLL_TIMEOUT = 120000; // 2 minutes
+
+function formatPhone(phone) {
+    if (!phone) return "";
+    phone = phone.trim();
+
+    if (phone.startsWith("0")) return "254" + phone.substring(1);
+    if (phone.startsWith("+254")) return phone.substring(1);
+    return phone;
+}
+
+function stopChecking() {
+    if (paymentInterval) {
+        clearInterval(paymentInterval);
+        paymentInterval = null;
+    }
+}
+
+function setStatus(message, type = "info") {
+    statusEl.className = "status " + type;
+    statusEl.innerText = message;
+}
+
+function resetButtons() {
+    payBtn.disabled = false;
+    payBtn.innerText = "Pay with M-Pesa";
+    resendBtn.style.display = "block";
+}
+
+function saveReceiptData(payment, checkoutRequestID) {
+    localStorage.setItem("paymentDate", payment?.created_at || new Date().toLocaleString());
+    localStorage.setItem("paidAmount", payment?.amount || "1");
+    localStorage.setItem("checkoutRequestID", checkoutRequestID || payment?.checkout_request_id || "");
+    localStorage.setItem("paymentStatus", payment?.status || "SUCCESS");
+
+    if (payment?.mpesa_receipt) {
+        localStorage.setItem("mpesaReceipt", payment.mpesa_receipt);
+    }
+
+    if (payment?.phone) {
+        localStorage.setItem("phone", payment.phone);
+    } else {
+    localStorage.setItem(
+        "phone",
+        document.getElementById("phone").value.trim()
+    );
+}
+
+    if (name) {
+        localStorage.setItem("firstName", name);
+    }
+}
+
+function checkPayment(checkoutRequestID) {
+    stopChecking();
+    pollingStartedAt = Date.now();
+
+    paymentInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`${API}/payment-status/${checkoutRequestID}`);
+            const data = await res.json();
+
+            console.log("PAYMENT STATUS:", data);
+
+            // SUCCESS
+            if (data.status === "SUCCESS" && data.found && data.payment) {
+                stopChecking();
+
+                saveReceiptData(data.payment, checkoutRequestID);
+
+                setStatus("Payment successful! Redirecting to your receipt...", "success");
+                payBtn.innerText = "Payment Confirmed";
+
+                setTimeout(() => {
+                    window.location.href = "recept.html";
+                }, 1500);
+
+                return;
+            }
+
+            // FAILED
+            if (data.status === "FAILED") {
+                stopChecking();
+                setStatus(data.message || "Payment failed.", "error");
+                resetButtons();
+                return;
+            }
+
+            // TIMEOUT
+            if (Date.now() - pollingStartedAt > POLL_TIMEOUT) {
+                stopChecking();
+                setStatus("Payment confirmation is taking too long. If you already paid, tap 'Resend Prompt' or refresh after a moment.", "error");
+                resetButtons();
+                return;
+            }
+
+            // PENDING
+            setStatus(data.message || "Waiting for payment confirmation...", "info");
+
+        } catch (err) {
+            console.error("Status check error:", err);
+
+            // Don't immediately stop on one network hiccup
+            setStatus("Still checking payment status...", "info");
+        }
+    }, POLL_INTERVAL);
+}
+async function pay() {
+
+    stopChecking();
+
+    const user = JSON.parse(localStorage.getItem("agrihub_user"));
+
+    if (!user) {
+        alert("User not logged in");
+        throw new Error("No user in localStorage");
+    }
+
+    const rawPhone = document.getElementById("phone").value.trim();
+    const amount = Number(document.getElementById("amount").value);
+
+    if (!rawPhone) {
+        alert("Please enter a phone number.");
+        return;
+    }
+
+    if (!amount || amount <= 0) {
+        alert("Please enter a valid amount.");
+        return;
+    }
+
+    const formattedPhone = formatPhone(rawPhone);
+
+    payBtn.disabled = true;
+    payBtn.innerText = "Sending STK Push...";
+    resendBtn.style.display = "none";
+
+    setStatus("Sending M-Pesa prompt to your phone...", "info");
+try {
+
+    console.log({
+        phone: formattedPhone,
+        amount,
+        userId: user.id,
+        project: "AGRIHUB"
+    });
+console.log("Current user:", user);
+console.log("User ID:", user.id);
+    const res = await fetch(`${API}/stkpush`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        
+       body: JSON.stringify({
+    phone: formattedPhone,
+    amount: amount,
+    userId: user.id
+})
+    });
+
+        const data = await res.json();
+
+        console.log("STK RESPONSE:", data);
+
+        if (!res.ok) {
+            throw new Error(data.error || data.ResponseDescription || "STK Push failed");
+        }
+
+        const checkoutRequestID =
+            data.CheckoutRequestID || data.checkoutRequestID;
+
+        if (!checkoutRequestID) {
+            throw new Error("No CheckoutRequestID returned from backend");
+        }
+
+        localStorage.setItem("checkoutRequestID", checkoutRequestID);
+
+        setStatus(
+            "STK Push sent. Check your phone and enter your M-Pesa PIN.",
+            "success"
+        );
+
+        payBtn.innerText = "Waiting for payment...";
+
+        checkPayment(checkoutRequestID);
+
+        setTimeout(() => {
+            if (payBtn.disabled && paymentInterval) {
+                resendBtn.style.display = "block";
+            }
+        }, 15000);
+
+    } catch (err) {
+
+        console.error(err);
+
+        setStatus("Payment failed: " + err.message, "error");
+
+        resetButtons();
+
+    }
+
+
+}
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
+function updatePresence() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: true,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+}
+
+// run immediately when page loads
+updatePresence();
+
+// keep updating every 15 seconds
+setInterval(updatePresence, 15000);
+</script>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+<script src="notifications.js"></script><script src="js/native.js"></script>
+</body>
+</html>

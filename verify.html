@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Account - AgriHub</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      background:linear-gradient(135deg,#eef7f1,#f4f6f8);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      color:#1f2937;
+    }
+
+    .card{
+      width:100%;
+      max-width:460px;
+      background:#fff;
+      border-radius:22px;
+      padding:24px;
+      box-shadow:0 20px 50px rgba(0,0,0,0.08);
+      border:1px solid #e7eaee;
+    }
+
+    .top{
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .icon{
+      width:70px;
+      height:70px;
+      margin:0 auto 14px;
+      border-radius:20px;
+      background:linear-gradient(135deg,#1f8f4e,#39b86c);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:28px;
+      box-shadow:0 12px 30px rgba(31,143,78,0.22);
+    }
+
+    h2{
+      font-size:24px;
+      color:#111827;
+      margin-bottom:6px;
+      font-weight:900;
+    }
+
+    .sub{
+      font-size:14px;
+      color:#667085;
+    }
+
+    .status-box{
+      margin:18px 0;
+      padding:14px;
+      border-radius:14px;
+      font-size:14px;
+      font-weight:700;
+      display:none;
+    }
+
+    .status-pending{
+      background:#fff8db;
+      color:#8a6500;
+      border:1px solid #f1df99;
+      display:block;
+    }
+
+    .status-verified{
+      background:#eaf8ef;
+      color:#17683b;
+      border:1px solid #cde8d5;
+      display:block;
+    }
+
+    .status-rejected{
+      background:#fff0f0;
+      color:#b42318;
+      border:1px solid #f5c6c6;
+      display:block;
+    }
+
+    .upload-grid{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      margin-top:10px;
+    }
+
+    .upload-box{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:14px;
+      background:#fafbfc;
+    }
+
+    .upload-label{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      color:#111827;
+      margin-bottom:10px;
+      font-size:14px;
+    }
+
+    .upload-label i{
+      color:#1f8f4e;
+    }
+
+    input[type="file"]{
+      width:100%;
+      padding:10px;
+      border:1px solid #dbe1e7;
+      border-radius:12px;
+      background:#fff;
+      cursor:pointer;
+    }
+
+    .btn{
+      width:100%;
+      margin-top:18px;
+      border:none;
+      border-radius:14px;
+      padding:14px;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      transition:0.2s ease;
+    }
+
+    .btn-primary{
+      background:#1f8f4e;
+      color:#fff;
+      box-shadow:0 8px 20px rgba(31,143,78,0.22);
+    }
+
+    .btn-primary:hover{
+      background:#18753f;
+      transform:translateY(-1px);
+    }
+
+    .btn-primary:disabled{
+      background:#98a2b3;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .btn-secondary{
+      margin-top:10px;
+      background:#eef2f5;
+      color:#111827;
+    }
+
+    .btn-secondary:hover{
+      background:#e4e7eb;
+    }
+
+    .progress{
+      margin-top:14px;
+      font-size:14px;
+      color:#667085;
+      text-align:center;
+      min-height:20px;
+      font-weight:700;
+    }
+
+    .note{
+      margin-top:16px;
+      background:#f8fafb;
+      border:1px solid #edf0f3;
+      border-radius:14px;
+      padding:12px;
+      font-size:13px;
+      color:#667085;
+      text-align:center;
+    }
+
+    @media (max-width: 520px){
+      .card{
+        padding:18px;
+        border-radius:18px;
+      }
+
+      h2{
+        font-size:21px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="top">
+      <div class="icon">
+        <i class="fa-solid fa-user-check"></i>
+      </div>
+      <h2>Verify Account</h2>
+      <div class="sub">Upload 3 photos to continue</div>
+    </div>
+
+    <div id="statusBox" class="status-box"></div>
+
+    <div class="upload-grid">
+      <div class="upload-box">
+        <div class="upload-label">
+          <i class="fa-solid fa-id-card"></i>
+          <span>ID Front</span>
+        </div>
+        <input type="file" id="front" accept="image/*">
+      </div>
+
+      <div class="upload-box">
+        <div class="upload-label">
+          <i class="fa-solid fa-id-card-clip"></i>
+          <span>ID Back</span>
+        </div>
+        <input type="file" id="back" accept="image/*">
+      </div>
+
+      <div class="upload-box">
+        <div class="upload-label">
+          <i class="fa-solid fa-camera"></i>
+          <span>Selfie</span>
+        </div>
+        <input type="file" id="selfie" accept="image/*">
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="submitBtn" onclick="submitVerification()">
+      Submit Verification
+    </button>
+
+    <button class="btn btn-secondary" onclick="goBack()">
+      Back to Dashboard
+    </button>
+
+    <div class="progress" id="progressText"></div>
+
+    <div class="note">
+      Clear photos only.
+    </div>
+  </div>
+<script src="auth.js"></script>
+<script>
+  protectPage();
+</script>
+  <script>
+    const supabaseUrl = "https://wfbepkegbtxszhhozqtz.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"; // put your real anon key here
+    const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    // IMPORTANT: change only if your bucket name is different
+    const STORAGE_BUCKET = "kyc";
+
+    const user = JSON.parse(localStorage.getItem("agrihub_user"));
+    if (!user || !user.id) {
+      window.location.href = "index.html";
+    }
+
+    const statusBox = document.getElementById("statusBox");
+    const progressText = document.getElementById("progressText");
+    const submitBtn = document.getElementById("submitBtn");
+
+    let currentVerification = null;
+
+    function goBack() {
+      window.location.href = "farmerdashboard.html";
+    }
+
+    function setStatus(type, text) {
+      statusBox.className = "status-box";
+      if (type === "pending") statusBox.classList.add("status-pending");
+      if (type === "verified") statusBox.classList.add("status-verified");
+      if (type === "rejected") statusBox.classList.add("status-rejected");
+      statusBox.innerText = text;
+      statusBox.style.display = "block";
+    }
+
+    function disableForm(disabled = true) {
+      document.getElementById("front").disabled = disabled;
+      document.getElementById("back").disabled = disabled;
+      document.getElementById("selfie").disabled = disabled;
+      submitBtn.disabled = disabled;
+    }
+
+    async function loadVerificationStatus() {
+      try {
+        const { data, error } = await sb
+          .from("verifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Load verification error:", error);
+          return;
+        }
+
+        if (!data) return;
+
+        currentVerification = data;
+        const status = (data.status || "").toLowerCase().trim();
+
+        if (status === "pending") {
+          setStatus("pending", "Verification pending review");
+          disableForm(true);
+        } else if (status === "verified") {
+          setStatus("verified", "Your account is verified");
+          disableForm(true);
+        } else if (status === "rejected") {
+          setStatus("rejected", "Verification rejected. Submit again");
+          disableForm(false);
+        }
+      } catch (err) {
+        console.error("Verification check error:", err);
+      }
+    }
+
+    async function uploadFile(file, label) {
+      if (!file) throw new Error(label + " file missing");
+
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const filePath = `users/${user.id}-${label}-${Date.now()}.${ext}`;
+
+      const { error } = await sb.storage
+        .from(STORAGE_BUCKET)
+        .upload(filePath, file, { upsert: true });
+
+      if (error) {
+        console.error("Upload error:", error);
+        throw new Error(error.message || "Upload failed");
+      }
+
+      const { data } = sb.storage
+        .from(STORAGE_BUCKET)
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    }
+
+    async function submitVerification() {
+      try {
+        const front = document.getElementById("front").files[0];
+        const back = document.getElementById("back").files[0];
+        const selfie = document.getElementById("selfie").files[0];
+
+        if (!front || !back || !selfie) {
+          alert("Upload all 3 images");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        progressText.innerText = "Uploading images...";
+
+      const [frontUrl, backUrl, selfieUrl] = await Promise.all([
+    uploadFile(front, "front"),
+    uploadFile(back, "back"),
+    uploadFile(selfie, "selfie")
+]);
+
+        progressText.innerText = "Submitting...";
+
+        if (currentVerification && (currentVerification.status || "").toLowerCase() === "rejected") {
+          const { error: updateError } = await sb
+            .from("verifications")
+            .update({
+              id_front: frontUrl,
+              id_back: backUrl,
+              face_image: selfieUrl,
+              status: "pending",
+              created_at: new Date().toISOString()
+            })
+            .eq("id", currentVerification.id);
+
+          if (updateError) {
+            console.error("Update verification error:", updateError);
+            throw new Error(updateError.message || "Failed to update verification");
+          }
+        } else {
+          const { error: insertError } = await sb
+            .from("verifications")
+            .insert({
+              user_id: user.id,
+              id_front: frontUrl,
+              id_back: backUrl,
+              face_image: selfieUrl,
+              status: "pending"
+            });
+
+          if (insertError) {
+            console.error("Insert verification error:", insertError);
+            throw new Error(insertError.message || "Failed to submit verification");
+          }
+        }
+
+        // optional: if your users table has verification_status column
+        const { error: userUpdateError } = await sb
+          .from("users")
+          .update({ verification_status: "pending" })
+          .eq("id", user.id);
+
+        if (userUpdateError) {
+          console.warn("users.verification_status update skipped:", userUpdateError.message);
+        }
+
+        setStatus("pending", "Verification submitted");
+        disableForm(true);
+        progressText.innerText = "";
+
+        setTimeout(() => {
+          window.location.href = "farmerdashboard.html";
+        }, 1500);
+
+      } catch (err) {
+        console.error("Submit verification error:", err);
+        progressText.innerText = "";
+        submitBtn.disabled = false;
+        alert(err.message || "Verification failed");
+      }
+    }
+
+    loadVerificationStatus();
+    window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb2.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
+async function updatePresence() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  const { error } = await sb
+    .from("users")
+    .update({
+      online: true,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Presence update failed:", error);
+  } else {
+    console.log("Presence updated successfully");
+  }
+}
+
+updatePresence();
+setInterval(updatePresence, 15000);
+  </script>
+  <script src="tokenEngine.js"></script>
+  <audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+<script src="notifications.js"></script><script src="js/native.js"></script>
+</body>
+</html>

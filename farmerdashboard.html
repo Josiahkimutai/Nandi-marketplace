@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgriHub Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
+
+body{
+  background:#eef2f5;
+  padding-bottom:90px;
+  color:#1f2937;
+  
+}
+
+/* TOP BAR (SQUEEZED) */
+.topbar{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:18px 10px 8px 10px;  /* 🔥 ADD MORE TOP SPACE */
+
+  background:#fff;
+  position:sticky;
+  top:0;
+  z-index:1000;
+
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  gap:10px;
+
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.logo i{
+  background:#1f8f4e;
+  color:#fff;
+  padding:8px;
+  border-radius:10px;
+}
+
+/* USER BOX */
+.user-box{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.user-box img{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid #1f8f4e;
+}
+
+/* DASHBOARD BAR */
+.dashboard-bar{
+    background:transparent;
+    box-shadow:none;
+    border:none;
+
+    margin:10px 14px;
+    padding:0;
+
+    position:sticky;
+    top:60px;
+    z-index:999;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+
+    background:transparent;
+    padding:0;
+}
+
+.sell-btn{
+  background:#1f8f4e;
+  color:#fff;
+  border:none;
+  padding:8px 14px;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+/* CATEGORY BAR */
+
+/* ===========================
+   CATEGORY BAR
+=========================== */
+
+.filter-bar{
+    margin:10px;
+    padding:10px;
+
+    background:#f8faf9;
+    border-radius:22px;
+
+    border:1px solid #e5e7eb;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.06);
+
+    position:sticky;
+    top:58px;
+
+    z-index:998;
+
+    transition:all .3s ease;
+}
+
+.filter-bar.hide{
+    opacity:0;
+    transform:translateY(-120%);
+    pointer-events:none;
+
+}
+/* ===========================
+   COMPACT CATEGORY GRID
+=========================== */
+/* ===========================
+   ULTRA COMPACT CATEGORY GRID
+=========================== */
+
+.category-scroll{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:8px;
+}
+
+.cat-btn{
+
+    position:relative;
+
+    background:transparent;
+    border:none;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    cursor:pointer;
+
+    padding:2px;
+}
+
+.cat-btn i{
+
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:18px;
+
+    background:#ffffff;
+
+    border:2px solid #d9e6dc;
+
+    color:#1f8f4e;
+
+    box-shadow:0 2px 6px rgba(0,0,0,.05);
+
+    transition:.25s;
+}
+
+.cat-btn:hover i{
+
+    background:#1f8f4e;
+
+    color:white;
+
+    border-color:#1f8f4e;
+
+    transform:scale(1.08);
+}
+
+.cat-btn small{
+
+    margin-top:4px;
+
+    font-size:9px;
+
+    font-weight:700;
+
+    color:#444;
+
+    text-align:center;
+}
+
+/* Notification Badge */
+
+.cat-badge{
+
+    position:absolute;
+
+    top:-2px;
+    right:6px;
+
+    min-width:16px;
+    height:16px;
+
+    border-radius:50%;
+
+    background:#ef4444;
+
+    color:#fff;
+
+    font-size:8px;
+
+    font-weight:800;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:2px solid white;
+}
+
+/* Icon Colors */
+
+.cat-btn:nth-child(1) i{background:#DCFCE7;color:#16A34A;}
+.cat-btn:nth-child(2) i{background:#DCFCE7;color:#16A34A;}
+.cat-btn:nth-child(3) i{background:#DBEAFE;color:#2563EB;}
+.cat-btn:nth-child(4) i{background:#FCE7F3;color:#EC4899;}
+.cat-btn:nth-child(5) i{background:#FFEDD5;color:#EA580C;}
+.cat-btn:nth-child(6) i{background:#FEE2E2;color:#DC2626;}
+.cat-btn:nth-child(7) i{background:#EDE9FE;color:#7C3AED;}
+.cat-btn:nth-child(8) i{background:#CFFAFE;color:#0891B2;}
+.cat-btn:nth-child(9) i{background:#E5E7EB;color:#6B7280;}
+.cat-btn:nth-child(10) i{background:#FEF3C7;color:#D97706;}
+.cat-btn:nth-child(11) i{background:#D1FAE5;color:#059669;}
+.cat-btn:nth-child(12) i{background:#DBEAFE;color:#0284C7;}
+.cat-btn:nth-child(13) i{background:#FFEDD5;color:#F97316;}
+.cat-btn:nth-child(14) i{background:#CCFBF1;color:#0F766E;}
+.cat-btn:nth-child(15) i{background:#FEE2E2;color:#EF4444;}
+/* Badge */
+
+.cat-badge{
+    position:absolute;
+    top:6px;
+    right:6px;
+
+    min-width:20px;
+    height:20px;
+
+    border-radius:50%;
+
+    background:#ef4444;
+    color:#fff;
+
+    font-size:10px;
+    font-weight:800;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:2px solid white;
+}
+/* FEED */
+.feed{
+    padding:8px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.post{
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid #e5e7eb;
+}
+
+.post-header{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  align-items:center;
+}
+
+.post-left{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.message-btn{
+    position: relative;
+    top: 12px;          /* Moves button down */
+    background:#1f8f4e;
+    color:#fff;
+    border:none;
+    padding:8px 16px;
+    border-radius:12px;
+    font-weight:700;
+    cursor:pointer;
+}
+html{
+    scroll-behavior:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+body{
+    overflow-y:auto;
+}
+.message-badge{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    min-width:20px;
+    height:20px;
+    border-radius:50%;
+    background:#e11d48;
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:2px solid white;
+
+}
+.post{
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid #ececec;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+.post-header{
+    padding:8px 10px;
+}
+
+.post-header img{
+    width:34px;
+    height:34px;
+}
+.post-header img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+/* VERIFIED BADGE */
+
+.verified-badge{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#16a34a;
+    color:#fff;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    box-shadow:0 2px 6px rgba(22,163,74,.35);
+
+}
+/* PRODUCT IMAGE */
+/* PRODUCT IMAGE */
+
+/* IMAGE GALLERY */
+
+.img-box{
+    position:relative;
+
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:4px;
+
+    background:#f5f5f5;
+    padding:4px;
+}
+
+.img-box img{
+    width:100%;
+    height:180px;
+    object-fit:cover;
+    border-radius:8px;
+    display:block;
+}
+
+/* 1 image */
+.img-box img:only-child{
+    grid-column:1 / span 2;
+    height:320px;
+}
+
+/* 2 images */
+.img-box img:nth-child(1):nth-last-child(2),
+.img-box img:nth-child(2):nth-last-child(1){
+    height:220px;
+}
+
+/* 3 images */
+.img-box img:first-child:nth-last-child(3){
+    grid-column:1 / span 2;
+    height:240px;
+}
+
+.img-box img:first-child:nth-last-child(3) ~ img{
+    height:150px;
+}
+
+/* SOLD overlay */
+.sold-overlay{
+    position:absolute;
+    inset:0;
+
+    background:rgba(0,0,0,.45);
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    color:#fff;
+    font-size:34px;
+    font-weight:900;
+
+    letter-spacing:2px;
+
+    z-index:20;
+
+}
+.post-body{
+    padding:8px 10px;
+}
+
+.post-body h3{
+    font-size:16px;
+    margin-bottom:4px;
+}
+
+.price{
+    font-size:18px;
+    font-weight:800;
+}
+
+.time{
+    font-size:11px;
+}
+
+.actions{
+    padding:8px;
+    gap:6px;
+}
+
+.small-btn{
+    padding:7px 10px;
+    font-size:12px;
+    border-radius:8px;
+}
+
+.locked{opacity:0.5;pointer-events:none;}
+
+/* BOTTOM NAV UPDATED */
+.bottom-nav{
+    position:fixed;
+    left:8px;
+    right:8px;
+    bottom:8px;
+
+    height:60px;   /* reduced height */
+
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+
+    background:rgba(20,20,20,0.92);
+    backdrop-filter:blur(18px);
+
+    border-radius:22px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+
+    z-index:9999;
+    transition:all .3s ease;
+}
+@media (max-width: 480px){
+    .bottom-nav{
+        height:48px;
+        left:4px;
+        right:4px;
+        bottom:4px;
+        border-radius:14px;
+    }
+
+    .bottom-nav button i{
+        font-size:16px;
+    }
+
+    .bottom-nav button span{
+        font-size:8px;
+    }
+}
+.cat-icon{
+    position:relative;
+    font-size:26px;
+    display:inline-block;
+}
+
+.cat-label{
+    margin-top:6px;
+    font-size:11px;
+    font-weight:700;
+}
+
+.cat-badge{
+    position:absolute;
+    top:-8px;
+    right:-10px;
+
+    min-width:18px;
+    height:18px;
+
+    background:#ef4444;
+    color:#fff;
+
+    border-radius:50%;
+    border:2px solid white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:10px;
+    font-weight:800;
+}
+
+.bottom-nav button{
+    border:none;
+    background:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    color:#1f8f4e;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.25s;
+}
+
+
+.status{
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.status.verified{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.status.pending{
+    background:#fef3c7;
+    color:#b45309;
+}
+
+.status.rejected{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.status.notverified{
+    background:#e5e7eb;
+    color:#374151;
+}
+.whatsapp-btn{
+  background:#25D366;   /* WhatsApp green */
+  color:white;
+}
+
+.whatsapp-btn:hover{
+  background:#1ebe5d;
+}
+
+.message-btn-post{
+  background:#6b7280;   /* grey */
+  color:white;
+}
+
+.message-btn-post:hover{
+  background:#4b5563;
+}
+.verify-btn i{
+  font-size:16px;
+}
+
+/* ==========================
+   PREMIUM FLOATING NAV
+========================== */
+
+.bottom-nav{
+    position:fixed;
+    left:6px;
+    right:6px;
+    bottom:6px;
+
+    height:52px; /* 🔥 thinner */
+
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+
+    background:rgba(20,20,20,0.92);
+    backdrop-filter:blur(15px);
+
+    border-radius:18px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    box-shadow:0 8px 18px rgba(0,0,0,.22);
+
+    z-index:9999;
+}
+
+.bottom-nav.hide{
+    transform:translateY(120%);
+    opacity:0;
+}
+
+.bottom-nav button{
+    flex:1;
+    height:100%;
+    border:none;
+    background:none;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    cursor:pointer;
+
+    color:white;
+
+    transition:.3s;
+}
+
+.bottom-nav button i{
+    font-size:18px;  /* thinner look */
+    margin-bottom:2px;
+}
+
+.bottom-nav button span{
+    font-size:11px;
+    font-weight:700;
+    color:white;
+}
+
+/* HOME */
+.bottom-nav button:nth-child(1) i{
+    color:#3B82F6;
+}
+
+/* LISTINGS */
+.bottom-nav button:nth-child(2) i{
+    color:#22C55E;
+}
+
+/* SELL */
+.bottom-nav button:nth-child(3) i{
+    color:#F59E0B;
+    font-size:30px;
+}
+
+/* ACCOUNT */
+.bottom-nav button:nth-child(4) i{
+    color:#A855F7;
+}
+
+/* LOGOUT */
+.bottom-nav button:nth-child(5) i{
+    color:#EF4444;
+}
+
+.bottom-nav button:hover{
+    transform:translateY(-5px);
+}
+
+.bottom-nav button:hover i{
+    transform:scale(1.15);
+}
+
+/* ACTIVE BUTTON */
+
+.nav-active{
+    position:relative;
+}
+
+.nav-active::before{
+    content:'';
+    position:absolute;
+    top:8px;
+    width:40px;
+    height:40px;
+    background:rgba(255,255,255,.12);
+    border-radius:50%;
+}
+</style>
+</head>
+<!-- VERIFIED SUCCESS POPUP -->
+<div id="verifiedPopup" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.55);
+justify-content:center;
+align-items:center;
+z-index:999999;
+">
+
+<div style="
+background:#fff;
+width:90%;
+max-width:340px;
+padding:25px;
+border-radius:18px;
+text-align:center;
+animation:pop .3s ease;
+">
+
+<div style="
+width:70px;
+height:70px;
+margin:auto;
+border-radius:50%;
+background:#dcfce7;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:36px;
+color:#16a34a;
+">
+✔
+</div>
+
+<h2 style="margin-top:15px;color:#15803d;">
+Congratulations!
+</h2>
+
+<p style="margin:12px 0;color:#555;">
+Your account has been successfully verified.
+You can now contact sellers, buyers and enjoy all AgriHub features.
+</p>
+
+<button onclick="closeVerifiedPopup()" style="
+background:#16a34a;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+width:100%;
+">
+Continue
+</button>
+
+</div>
+
+</div>
+
+<style>
+@keyframes pop{
+from{
+transform:scale(.7);
+opacity:0;
+}
+to{
+transform:scale(1);
+opacity:1;
+}
+}.net-toast{
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+
+    padding: 10px 16px;
+    border-radius: 12px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    color: #fff;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: all .3s ease;
+}
+
+.net-toast.show{
+    opacity: 1;
+    top: 20px;
+}
+
+.net-toast.online{
+    background: #16a34a;
+}
+
+.net-toast.offline{
+    background: #dc2626;
+}
+</style>
+<body>
+<div id="netToast" class="net-toast"></div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">
+    <i class="fa-solid fa-leaf"></i>
+    <b>Nandi Marketplace</b>
+  </div>
+
+  <div class="user-box">
+  <img id="userAvatar" src="https://i.pravatar.cc/100" />
+  
+  <div style="display:flex;flex-direction:column;line-height:1.1;">
+    <span id="welcomeText">Welcome</span>
+
+    <!-- ONLINE INDICATOR HERE -->
+   
+  </div>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard-bar">
+  <div class="row">
+    <div> </b> <span id="activeCount"></span></div>
+   <button class="message-btn" onclick="location.href='inbox.html'">
+    <i class="fa fa-comment"></i>
+    Messages
+    <span id="messageBadge" class="message-badge" style="display:none;">0</span>
+</button>
+  </div>
+</div>
+
+<!-- CATEGORY BAR -->
+<div class="filter-bar" id="categoryBar">
+<div class="category-scroll">
+
+    <button class="cat-btn" onclick="filterFeed('all')">
+        <span class="cat-badge" id="count-all">0</span>
+        <i class="fa-solid fa-store"></i>
+        <small>All</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('agriculture')">
+        <span class="cat-badge" id="count-agriculture">0</span>
+        <i class="fa-solid fa-wheat-awn"></i>
+        <small>Farm</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('electronics')">
+        <span class="cat-badge" id="count-electronics">0</span>
+        <i class="fa-solid fa-laptop"></i>
+        <small>Electronics</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('fashion')">
+        <span class="cat-badge" id="count-fashion">0</span>
+        <i class="fa-solid fa-shirt"></i>
+        <small>Fashion</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('home')">
+        <span class="cat-badge" id="count-home">0</span>
+        <i class="fa-solid fa-couch"></i>
+        <small>Home</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('vehicles')">
+        <span class="cat-badge" id="count-vehicles">0</span>
+        <i class="fa-solid fa-car"></i>
+        <small>Cars</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('property')">
+        <span class="cat-badge" id="count-property">0</span>
+        <i class="fa-solid fa-house"></i>
+        <small>Rentals</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('services')">
+        <span class="cat-badge" id="count-services">0</span>
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <small>Services</small>
+    </button>
+
+    <button class="cat-btn" onclick="filterFeed('others')">
+        <span class="cat-badge" id="count-others">0</span>
+        <i class="fa-solid fa-box-open"></i>
+        <small>Others</small>
+    </button>
+
+    <button class="cat-btn" onclick="location.href='jobs.html'">
+        <i class="fa-solid fa-briefcase"></i>
+        <small>Jobs</small>
+    </button>
+
+    <button class="cat-btn" onclick="location.href='transport.html'">
+        <i class="fa-solid fa-truck"></i>
+        <small>Transport</small>
+    </button>
+
+    <button class="cat-btn" onclick="location.href='vetservices.html'">
+        <i class="fa-solid fa-stethoscope"></i>
+        <small>Vet</small>
+    </button>
+
+
+</div>
+</div>
+
+</div>
+
+
+
+</div>
+
+<!-- FEED -->
+<div class="feed" id="feed">Loading...</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottomNav">
+
+  <button onclick="location.href='farmerdashboard.html'">
+      <i class="fa fa-home"></i>
+      Home
+  </button>
+
+  <button onclick="location.href='mylistings.html'" style="position:relative;">
+    <i class="fa fa-box"></i>
+    My Listings
+
+    <!-- 🔥 BADGE -->
+    <span id="listingsBadge" class="cat-badge" style="
+        position:absolute;
+        top:-6px;
+        right:18px;
+        min-width:18px;
+        height:18px;
+        font-size:10px;
+        background:#e93609;
+    ">
+        0
+    </span>
+</button>
+
+  <button onclick="location.href='sell.html'">
+      <i class="fa fa-plus-circle"></i>
+      Sell
+  </button>
+
+  <button onclick="location.href='myaccount.html'">
+      <i class="fa fa-user"></i>
+      My Account
+  </button>
+
+  <button onclick="logout()">
+      <i class="fa fa-right-from-bracket"></i>
+      Logout
+  </button>
+
+</div>
+
+<script>
+const sb = supabase.createClient(
+  "https://wfbepkegbtxszhhozqtz.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
+);
+const likeSound = new Audio("sounds/like.mp3");
+const user = JSON.parse(localStorage.getItem("agrihub_user") || "null");
+console.log("Dashboard user:", localStorage.getItem("agrihub_user"));
+
+window.user = user;
+async function setUserOnline(status) {
+
+    if (!user || !user.id) return;
+
+    const { data, error } = await sb
+        .from("users")
+        .update({
+            online: status,
+            last_seen: new Date().toISOString()
+        })
+        .eq("id", user.id)
+        .select();
+
+    if (error) {
+        console.error("Online update failed:", error);
+        return;
+    }
+
+    console.log("Online updated:", data);
+}
+if (!user || !user.id) {
+  window.location.href = "index.html";
+}
+window.addEventListener("beforeunload", () => {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+});
+
+async function getBuyerLocation() {
+
+    return new Promise((resolve, reject) => {
+
+        navigator.geolocation.getCurrentPosition(
+
+            position => {
+
+                buyerLatitude = position.coords.latitude;
+                buyerLongitude = position.coords.longitude;
+
+                // 🔥 ADD THESE
+                console.log("BUYER LOCATION");
+                console.log("Latitude:", buyerLatitude);
+                console.log("Longitude:", buyerLongitude);
+                console.log("Accuracy:", position.coords.accuracy, "meters");
+
+                resolve();
+
+            },
+
+            error => {
+                console.error(error);
+                reject(error);
+            },
+
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 15000
+            }
+
+        );
+
+    });
+
+
+}
+/* =========================
+   STATE
+========================= */
+
+let allProducts = [];
+let currentImage = "";
+console.log(allProducts);
+
+/* =========================
+   LOAD USER PROFILE
+========================= */
+async function loadUser() {
+
+  const { data } = await sb
+    .from("users")
+    .select("full_name, token_balance")
+    .eq("id", user.id)
+    .single();
+
+  tokenBalance = Number(data?.token_balance || 0);
+console.log("Current Tokens:", tokenBalance);
+  document.getElementById("welcomeText").innerText =
+    `Welcome, ${data?.full_name || "User"}`;
+
+  document.getElementById("userAvatar").src =
+    `https://i.pravatar.cc/100?u=${user.id}`;
+
+}
+function getCurrentUser() {
+    try {
+        const raw = localStorage.getItem("agrihub_user");
+
+        if (!raw || raw === "null" || raw === "undefined") {
+            return null;
+        }
+
+        const user = JSON.parse(raw);
+
+        if (!user || !user.id) {
+            return null;
+        }
+
+        return user;
+
+    } catch (e) {
+        console.error("User parse failed:", e);
+        return null;
+    }
+}
+
+let isVerified = false;
+let tokenBalance = 0;
+let cachedFeed = [];
+
+async function loadVerification() {
+  const { data, error } = await sb
+    .from("verifications")
+    .select("user_id, status");
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const my = data?.find(v => v.user_id === user.id);
+
+  const status = (my?.status || "notverified").toLowerCase();
+
+  // 🔥 SINGLE SOURCE OF TRUTH
+ // 🔥 SINGLE SOURCE OF TRUTH
+isVerified = ["verified", "approved"].includes(status.toLowerCase());
+
+console.log("VERIFICATION STATUS:", status, "isVerified:", isVerified);
+
+updateVerificationUI(status);
+
+// Show popup only once
+const verifiedKey = "verified_popup_" + user.id;
+
+if (isVerified && !localStorage.getItem(verifiedKey)) {
+    showVerifiedPopup();
+    localStorage.setItem(verifiedKey, "shown");
+}
+
+// refresh feed AFTER status is known
+renderFeed(allProducts);
+
+}
+
+/* =========================
+   UPDATE UI STATUS CARD
+========================= */
+function updateVerificationUI(status) {
+  const badge = document.getElementById("verifyStatus");
+  if (!badge) return;
+
+  // reset classes first
+  badge.classList.remove("verified", "pending", "rejected", "notverified");
+
+  const normalized = (status || "notverified").toLowerCase();
+
+  if (normalized === "verified" || normalized === "approved") {
+    badge.innerText = "Verified";
+    badge.classList.add("verified");
+  }
+
+  else if (normalized === "pending") {
+    badge.innerText = "Pending Review";
+    badge.classList.add("pending");
+  }
+
+  else if (normalized === "rejected") {
+    badge.innerText = "Rejected";
+    badge.classList.add("rejected");
+  }
+
+  else {
+    badge.innerText = "Not Verified";
+    badge.classList.add("notverified");
+  }
+}
+
+/* =========================
+   FEED
+========================= */
+async function loadFeed() {
+cachedFeed = allProducts.slice(0, 10); // keep latest 10 only
+localStorage.setItem("agrihub_cached_feed", JSON.stringify(cachedFeed));
+const { data, error } = await sb
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
+console.log("Products:", data);
+console.log("Error:", error);
+
+if (error) {
+    console.error(error);
+    return;
+}
+
+allProducts = data || [];
+
+cacheFeed(allProducts);
+
+updateStats(allProducts);
+renderFeed(allProducts);
+updateListingsBadge(allProducts);
+}
+function updateListingsBadge(products){
+
+    const myListings = products.filter(p => p.user_id === user.id);
+
+    const badge = document.getElementById("listingsBadge");
+
+    if(!badge) return;
+
+    if(myListings.length > 0){
+        badge.style.display = "flex";
+        badge.innerText = myListings.length > 99 ? "99+" : myListings.length;
+    } else {
+        badge.style.display = "none";
+    }
+ 
+}
+function loadOfflineFeed() {
+    const feed = document.getElementById("feed");
+
+    const cachedRaw = localStorage.getItem("agrihub_cached_feed");
+    const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+
+    if (!cached || !cached.data?.length) {
+        feed.innerHTML = `
+            <div style="padding:20px;text-align:center;color:#666;">
+                📡 No internet connection<br><br>
+                No cached posts available yet.
+            </div>
+        `;
+        return;
+    }
+
+    const ageMinutes = Math.floor((Date.now() - cached.time) / 60000);
+
+    feed.innerHTML = `
+        <div style="padding:10px;text-align:center;font-size:12px;color:#888;">
+            Showing saved feed (${ageMinutes} min old)
+        </div>
+    `;
+
+    renderFeed(cached.data);
+}async function smartLoadFeed() {
+    if (navigator.onLine) {
+        await loadFeed();        // fetch fresh data
+        cacheFeed(allProducts);  // then cache it
+    } else {
+        loadOfflineFeed();       // fallback
+    }
+}
+function updateStats(products){
+
+    const categories = {
+        all: 0,
+        agriculture: 0,
+        electronics: 0,
+        fashion: 0,
+        home: 0,
+        vehicles: 0,
+        property: 0,
+        services: 0,
+        others: 0
+    };
+
+    products.forEach(p => {
+
+        categories.all++;
+
+        const cat = (p.category || "others")
+            .toLowerCase()
+            .trim();
+
+        if (cat === "agriculture") {
+            categories.agriculture++;
+        }
+        else if (cat === "electronics") {
+            categories.electronics++;
+        }
+        else if (cat === "fashion") {
+            categories.fashion++;
+        }
+        else if (cat === "home") {
+            categories.home++;
+        }
+        else if (cat === "vehicles") {
+            categories.vehicles++;
+        }
+        else if (cat === "property") {
+            categories.property++;
+        }
+        else if (cat === "services") {
+            categories.services++;
+        }
+        else {
+            categories.others++;
+        }
+    });
+
+    document.getElementById("count-all").innerText = categories.all;
+    document.getElementById("count-agriculture").innerText = categories.agriculture;
+    document.getElementById("count-electronics").innerText = categories.electronics;
+    document.getElementById("count-fashion").innerText = categories.fashion;
+    document.getElementById("count-home").innerText = categories.home;
+    document.getElementById("count-vehicles").innerText = categories.vehicles;
+    document.getElementById("count-property").innerText = categories.property;
+    document.getElementById("count-services").innerText = categories.services;
+    document.getElementById("count-others").innerText = categories.others;
+}
+/* =========================
+   TIME FORMAT
+========================= */
+function formatTimeAgo(date) {
+  const diff = Math.floor((new Date() - new Date(date)) / 1000);
+  if (diff < 60) return diff + "s ago";
+  if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+  if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+  return Math.floor(diff / 86400) + "d ago";
+}
+/* =========================
+   VERIFIED USERS
+========================= */
+
+let verifiedUsers = {};
+
+async function loadVerifiedUsers() {
+
+    const { data, error } = await sb
+        .from("verifications")
+        .select("user_id,status");
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    verifiedUsers = {};
+
+    data.forEach(v => {
+
+        if (
+            v.status &&
+            (v.status.toLowerCase() === "verified" ||
+             v.status.toLowerCase() === "approved")
+        ) {
+            verifiedUsers[v.user_id] = true;
+        }
+
+    });
+
+}
+function calculateDistance(lat1, lon1, lat2, lon2) {
+
+    const R = 6371;
+
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1*Math.PI/180) *
+        Math.cos(lat2*Math.PI/180) *
+        Math.sin(dLon/2) *
+        Math.sin(dLon/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+/* =========================
+/* =========================
+   RENDER FEED (FIXED)
+========================= */
+function renderFeed(data) {
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+
+  data.forEach(p => {
+
+    const sellerId = p.user_id || null;
+    const sellerName = p.seller_name || "Seller";
+
+    const whatsappNumber = (p.whatsapp_number || "").trim();
+    const hasWhatsApp = whatsappNumber.length > 0;
+
+    const div = document.createElement("div");
+let gallery = "";
+
+// Collect all available images
+let images = [];
+
+if (Array.isArray(p.image_urls)) {
+    images = p.image_urls;
+} 
+else if (typeof p.image_urls === "string") {
+    try {
+        const parsed = JSON.parse(p.image_urls);
+        images = Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        images = [];
+    }
+}
+
+if (!images.length && p.image_url) {
+    images = [p.image_url];
+}
+
+// Build gallery
+gallery = images.map(url => `
+    <img
+        src="${url}"
+        loading="lazy"
+        alt="${p.name}"
+        onclick="openImageViewer(${JSON.stringify(images).replace(/"/g,"&quot;")}, ${images.indexOf(url)})"
+        style="cursor:pointer;"
+    >
+`).join("");
+
+// Fallback if no image exists
+if (gallery === "") {
+    gallery = `
+        <img src="https://placehold.co/600x400?text=No+Image"
+             loading="lazy"
+             alt="No Image">
+    `;
+}
+let distanceText = "";
+
+if (
+    buyerLatitude !== null &&
+    buyerLongitude !== null &&
+    p.latitude !== null &&
+    p.longitude !== null
+) {
+
+ console.log("BUYER:");
+console.log(buyerLatitude, buyerLongitude);
+
+console.log("PRODUCT:");
+console.log(p.latitude, p.longitude);
+
+const distance = calculateDistance(
+    buyerLatitude,
+    buyerLongitude,
+    p.latitude,
+    p.longitude
+);
+
+console.log("DISTANCE:", distance);
+
+distanceText = `${distance.toFixed(1)} km away`;
+}
+div.innerHTML = `
+<div class="post">
+
+   <!-- HEADER -->
+<div class="post-header">
+  <div class="post-left">
+
+    <img src="https://i.pravatar.cc/100?u=${sellerName}">
+
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+
+      <b>${sellerName}</b>
+
+      <span style="
+        background:${verifiedUsers[p.user_id] ? '#16a34a' : '#dc2626'};
+        color:white;
+        padding:4px 10px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:700;
+        display:inline-flex;
+        align-items:center;
+        gap:4px;
+      ">
+        ${verifiedUsers[p.user_id] ? ' ✔Verified' : ' ✖NotVerified'}
+      </span>
+
+    </div>
+
+  </div>
+</div>
+
+    <!-- IMAGE -->
+    <div class="img-box">
+        ${gallery}
+        ${p.sold ? `<div class="sold-overlay">SOLD</div>` : ""}
+    </div>
+
+</div>
+
+        <!-- BODY -->
+        <div class="post-body">
+          <h3>${p.name}</h3>
+          <div class="price">KES ${p.price}</div>
+          <div class="time">
+🕒 ${formatTimeAgo(p.created_at)}
+</div>
+
+<div style="
+margin-top:6px;
+font-weight:bold;
+color:#1f8f4e;
+">
+📏 ${distanceText}
+</div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+
+          <button class="small-btn whatsapp-btn">
+            WhatsApp
+          </button>
+
+          <button class="small-btn message-btn-post">
+            Message
+          </button>
+<button class="small-btn like-btn" data-id="${p.id}">
+  ❤️ <span id="like-${p.id}">${p.likes || 0}</span>
+</button>
+            
+      
+
+        </div>
+
+      </div>
+    `;
+
+    feed.appendChild(div);
+    div.querySelector(".like-btn").addEventListener("click", () => {
+  toggleLike(p.id);
+});
+
+    // ======================
+    // WHATSAPP CLICK
+    // ======================
+   div.querySelector(".whatsapp-btn").addEventListener("click", () => {
+
+    if (!isVerified) {
+        showVerifyPopup();
+        return;
+    }
+
+    if (tokenBalance <= 0) {
+        showTokenPopup();
+        return;
+    }
+
+    if (!hasWhatsApp) return;
+
+    window.open(`https://wa.me/${whatsappNumber}`, "_blank");
+});
+
+    // ======================
+    // MESSAGE CLICK
+    // ======================
+    div.querySelector(".message-btn-post").addEventListener("click", () => {
+
+    if (!isVerified) {
+        showVerifyPopup();
+        return;
+    }
+
+    if (tokenBalance <= 0) {
+        showTokenPopup();
+        return;
+    }
+
+    if (!sellerId) return;
+
+    openChat(sellerId, sellerName);
+});
+  });
+}
+/* =========================
+   FILTER
+========================= */
+function filterFeed(cat) {
+  if (cat === "all") return renderFeed(allProducts);
+  renderFeed(
+    allProducts.filter(p =>
+      (p.category || "").toLowerCase() === cat
+    )
+  );
+}
+
+/* =========================
+   LOGOUT
+========================= */
+function logout() {
+  localStorage.removeItem("agrihub_user");
+window.location.replace("index.html");
+}
+
+/* =========================
+   OPEN CHAT
+========================= */
+async function openChat(otherUserId, otherUserName) {
+
+  if (!otherUserId) {
+    alert("Seller ID missing.");
+    return;
+  }
+
+  if (String(otherUserId) === String(user.id)) {
+    alert("You cannot message yourself.");
+    return;
+  }
+
+  try {
+
+    // Look for an existing conversation
+    let { data: conversation, error } = await sb
+      .from("conversations")
+      .select("*")
+      .or(
+        `and(user1.eq.${user.id},user2.eq.${otherUserId}),and(user1.eq.${otherUserId},user2.eq.${user.id})`
+      )
+      .maybeSingle();
+
+    if (error) {
+      console.error("Conversation lookup:", error);
+      alert(error.message);
+      return;
+    }
+
+    // Create one if it doesn't exist
+    if (!conversation) {
+
+      const { data, error: createError } = await sb
+        .from("conversations")
+        .insert([
+          {
+            user1: user.id,
+            user2: otherUserId
+          }
+        ])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Conversation create:", createError);
+        alert(createError.message);
+        return;
+      }
+
+      conversation = data;
+    }
+
+    localStorage.setItem("chat_id", conversation.id);
+    localStorage.setItem("chat_user", otherUserId);
+    localStorage.setItem("chat_name", otherUserName);
+
+    window.location.href = "chat.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to open chat.");
+  }
+}
+/* =========================
+   INIT
+========================= */
+
+async function loadUnreadMessages() {
+  try {
+    const { data: conversations } = await sb
+      .from("conversations")
+      .select("id")
+      .or(`user1.eq.${user.id},user2.eq.${user.id}`);
+
+    const badge = document.getElementById("messageBadge");
+    if (!badge) return;
+
+    if (!conversations || conversations.length === 0) {
+      badge.style.display = "none";
+      return;
+    }
+
+    const ids = conversations.map(c => c.id);
+
+    const { count } = await sb
+      .from("messages")
+      .select("*", { count: "exact", head: true })
+      .in("conversation_id", ids)
+      .neq("sender_id", user.id)
+      .eq("is_read", false);
+
+    if (count && count > 0) {
+      badge.style.display = "flex";
+      badge.innerText = count > 99 ? "99+" : count;
+    } else {
+      badge.style.display = "none";
+    }
+
+  } catch (err) {
+    console.error("Badge error:", err);
+  }
+}
+
+  /* =========================
+   AUTO HIDE BOTTOM NAV
+========================= */
+
+let lastScrollTop = 0;
+
+const bottomNav = document.getElementById("bottomNav");
+const categoryBar = document.getElementById("categoryBar");
+
+window.addEventListener("scroll", function () {
+
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    // SCROLLING DOWN
+    if (scrollTop > lastScrollTop && scrollTop > 50) {
+
+        bottomNav.classList.add("hide");
+        categoryBar.classList.add("hide");
+
+    }
+
+    // SCROLLING UP
+    else {
+
+        bottomNav.classList.remove("hide");
+        categoryBar.classList.remove("hide");
+
+    }
+
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+
+});function showVerifyPopup() {
+  document.getElementById("verifyPopup").style.display = "flex";
+}
+
+function closeVerifyPopup() {
+  document.getElementById("verifyPopup").style.display = "none";
+}
+function openImageViewer(images, startIndex = 0){
+currentImage = images[startIndex];
+    const viewer = document.getElementById("imageViewer");
+    const gallery = document.getElementById("viewerGallery");
+
+    gallery.innerHTML = "";
+
+    images.forEach(src=>{
+
+        const slide = document.createElement("div");
+
+        slide.style.cssText=`
+            min-width:100%;
+            height:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            scroll-snap-align:start;
+        `;
+
+        slide.innerHTML=`
+            <img src="${src}"
+            style="
+            max-width:100%;
+            max-height:100%;
+            object-fit:contain;
+            ">
+        `;
+
+        gallery.appendChild(slide);
+
+    });
+
+    viewer.style.display="block";
+
+    setTimeout(()=>{
+        gallery.scrollLeft=gallery.clientWidth*startIndex;
+    },20);
+
+}
+
+function closeImageViewer(){
+
+    document.getElementById("imageViewer").style.display = "none";
+
+}
+async function toggleLike(productId) {
+  try {
+
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+
+    const newLikes = (product.likes || 0) + 1;
+
+    const { error } = await sb
+      .from("products")
+      .update({ likes: newLikes })
+      .eq("id", productId);
+
+    if (error) {
+      console.error("Supabase error:", error);
+      return;
+    }
+
+    // update local state
+    product.likes = newLikes;
+
+    // update UI
+    const el = document.getElementById(`like-${productId}`);
+    if (el) el.innerText = newLikes;
+
+    // 🔥 PLAY SOUND HERE
+    likeSound.currentTime = 0;
+    likeSound.play().catch(err => {
+      console.log("Like sound blocked:", err);
+    });
+
+  } catch (err) {
+    console.error("Like error:", err);
+  }
+}
+const productsChannel = sb
+  .channel("products-live")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "products"
+    },
+    (payload) => {
+      console.log("🔥 PRODUCT EVENT:", payload);
+      loadFeed();
+    }
+  )
+  .subscribe((status) => {
+      console.log("Products channel:", status);
+  });
+  async function syncOfflineTokens() {
+
+    const { data, error } = await sb
+        .from("users")
+        .select("token_balance,last_token_update")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !data) return;
+
+    const now = new Date();
+    const last = data.last_token_update
+        ? new Date(data.last_token_update)
+        : now;
+
+    // total seconds offline/online since last update
+    const diffMs = now - last;
+
+    if (diffMs <= 0) return;
+
+    // convert to 30-second blocks
+    const blocks = Math.floor(diffMs / 30000);
+
+    if (blocks <= 0) return;
+
+    const TOKENS_PER_30_SECONDS = 0.11574075;
+
+    const deduct = blocks * TOKENS_PER_30_SECONDS;
+
+    const newBalance = Math.max(
+        0,
+        Number(data.token_balance) - deduct
+    ).toFixed(6);
+
+    await sb
+        .from("users")
+        .update({
+            token_balance: newBalance,
+            last_token_update: now.toISOString()
+        })
+        .eq("id", user.id);
+
+    console.log("OFFLINE SYNC DEDUCTED:", deduct);
+}
+
+// ===============================
+// LIVE MESSAGE BADGE
+// ===============================
+const messagesChannel = sb
+  .channel("messages-live-dashboard")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "messages"
+    },
+    async (payload) => {
+
+      // reload unread badge
+      await loadUnreadMessages();
+
+      // play sound only for incoming messages
+      if (
+          payload.new &&
+          payload.new.sender_id !== user.id
+      ) {
+          const sound = document.getElementById("notificationSound");
+
+          if (sound) {
+              sound.currentTime = 0;
+              sound.play().catch(()=>{});
+          }
+      }
+
+    }
+  )
+  .subscribe(status=>{
+      console.log("Dashboard message channel:", status);
+  });
+function showVerifiedPopup() {
+
+    document.getElementById("verifiedPopup").style.display = "flex";
+
+    const sound = document.getElementById("notificationSound");
+
+    if (!sound) return;
+
+    sound.currentTime = 0;
+
+    sound.play().catch(err => {
+        console.log("Audio blocked:", err);
+    });
+
+}
+
+
+function closeVerifiedPopup() {
+    document.getElementById("verifiedPopup").style.display = "none";
+}
+// ===============================
+// LIVE VERIFICATION LISTENER
+// ===============================
+const verificationChannel = sb
+  .channel("verification-live")
+  .on(
+    "postgres_changes",
+    {
+      event: "UPDATE",
+      schema: "public",
+      table: "verifications"
+    },
+    (payload) => {
+
+      // Ignore updates for other users
+      if (payload.new.user_id !== user.id) return;
+
+      const status = (payload.new.status || "").toLowerCase();
+
+     if (
+    status === "approved" ||
+    status === "verified"
+) {
+
+        isVerified = true;
+
+        updateVerificationUI("approved");
+
+        // Prevent showing twice
+       showVerifiedPopup();
+
+localStorage.setItem(
+    "verified_popup_" + user.id,
+    "shown"
+);
+
+      }
+
+    }
+  )
+  .subscribe((status) => {
+      console.log("Verification channel:", status);
+  });
+/* =========================
+   INIT
+========================= */
+
+function showTokenPopup() {
+    document.getElementById("tokenPopup").style.display = "flex";
+}
+
+function closeTokenPopup() {
+    document.getElementById("tokenPopup").style.display = "none";
+}
+(async () => {
+
+    // Update online status (don't block loading)
+    setUserOnline(true);
+
+    // Start loading the feed immediately
+    smartLoadFeed();
+
+    // Load other information in parallel
+    loadUser();
+    loadVerification();
+    loadVerifiedUsers();
+    syncOfflineTokens();
+    loadUnreadMessages();
+
+    // Get GPS in the background
+    getBuyerLocation()
+        .then(() => {
+            renderFeed(allProducts); // refresh distances once location is known
+        })
+        .catch(() => {
+            console.log("Location unavailable.");
+        });
+
+})();
+function updatePresence() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+  if (!user) return;
+
+  sb.from("users")
+    .update({
+      online: true,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+}
+
+// run immediately when page loads
+updatePresence();
+
+// keep updating every 15 seconds
+setInterval(updatePresence, 15000);
+window.addEventListener("beforeunload", async () => {
+    await setUserOnline(false);
+});
+async function logout() {
+  const user = JSON.parse(localStorage.getItem("agrihub_user"));
+
+  await sb.from("users")
+    .update({
+      online: false,
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", user.id);
+
+  localStorage.removeItem("agrihub_user");
+  window.location.href = "index.html";
+}
+// Unlock notification sound after the first user interaction
+document.addEventListener("click", function unlockAudio() {
+
+    const sound = document.getElementById("notificationSound");
+
+    if (!sound) return;
+
+    sound.play()
+        .then(() => {
+            sound.pause();
+            sound.currentTime = 0;
+        })
+        .catch(() => {});
+
+    document.removeEventListener("click", unlockAudio);
+
+});
+window.addEventListener("messagesUpdated", () => {
+    loadUnreadMessages();
+});
+const netToast = document.getElementById("netToast");
+
+function showNetStatus(message, type) {
+    const netToast = document.getElementById("netToast");
+
+    if (!netToast) return;
+
+    netToast.innerText = message;
+    netToast.className = `net-toast show ${type}`;
+
+    clearTimeout(netToast._t);
+
+    netToast._t = setTimeout(() => {
+        netToast.classList.remove("show");
+    }, 3000);
+
+}window.addEventListener("offline", () => {
+    showNetStatus("You are offline", "offline");
+});
+
+window.addEventListener("online", () => {
+    showNetStatus("Back online", "online");
+});
+function checkInternet() {
+  if (!navigator.onLine) {
+    showNetStatus("You are offline", "offline");
+  }
+}
+window.addEventListener("online", async () => {
+    await loadFeed(); // refresh full feed when back online
+});
+
+window.addEventListener("offline", () => {
+    loadOfflineFeed(); // instantly switch to cached
+});
+// check every 5 seconds
+setInterval(checkInternet, 2000);
+function cacheFeed(products) {
+    const payload = {
+        time: Date.now(),
+        data: products
+    };
+
+    localStorage.setItem("agrihub_cached_feed", JSON.stringify(payload));
+}
+document.getElementById("downloadImageBtn").addEventListener("click", () => {
+
+    if (!currentImage) return;
+
+    const a = document.createElement("a");
+    a.href = currentImage;
+    a.download = "AgriHub_Image";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+});
+</script>
+<!-- VERIFY POPUP -->
+<div id="verifyPopup" style="
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+">
+  <div style="
+    background:#fff;
+    padding:20px;
+    border-radius:18px;
+    width:85%;
+    max-width:320px;
+    text-align:center;
+  ">
+    <div style="font-size:40px;color:#dc2626;">⚠</div>
+    <h3 style="margin:10px 0;color:#111;">Verification Required</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:15px;">
+      You must verify your account to contact sellers.
+    </p>
+
+    <button onclick="location.href='verify.html'" style="
+      background:#dc2626;
+      color:#fff;
+      border:none;
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:800;
+      cursor:pointer;
+      width:100%;
+    ">
+      Verify Now
+    </button>
+
+    <button onclick="closeVerifyPopup()" style="
+      margin-top:10px;
+      background:transparent;
+      border:none;
+      color:#666;
+      font-size:13px;
+      cursor:pointer;
+    ">
+      Cancel
+    </button>
+  </div>
+</div><!-- IMAGE VIEWER -->
+
+<div id="imageViewer" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000;
+z-index:999999;
+">
+
+<button onclick="closeImageViewer()" style="
+position:absolute;
+top:20px;
+right:20px;
+z-index:10;
+background:#fff;
+border:none;
+width:42px;
+height:42px;
+border-radius:50%;
+font-size:22px;
+cursor:pointer;
+">
+✕
+</button>
+<button id="downloadImageBtn" style="
+position:absolute;
+top:20px;
+left:20px;
+background:#1f8f4e;
+color:#fff;
+border:none;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+z-index:10;
+">
+<i class="fa fa-download"></i> Download
+</button>
+
+
+<div id="viewerGallery" style="
+display:flex;
+height:100%;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-behavior:smooth;
+">
+
+</div>
+
+</div>
+<div id="tokenPopup" style="
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.6);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:99999;
+">
+
+<div style="
+background:#fff;
+padding:20px;
+border-radius:18px;
+width:90%;
+max-width:320px;
+text-align:center;
+">
+
+<div style="font-size:45px;">🪙</div>
+
+<h3>Out of Tokens</h3>
+
+<p style="margin:15px 0;color:#666;">
+You don't have enough tokens to contact sellers.
+Please purchase tokens to continue.
+</p>
+
+<button
+onclick="location.href='pay.html'"
+style="
+background:#1f8f4e;
+color:#fff;
+border:none;
+padding:12px;
+width:100%;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+">
+Buy Tokens
+</button>
+
+<button
+onclick="closeTokenPopup()"
+style="
+margin-top:10px;
+background:none;
+border:none;
+cursor:pointer;
+">
+Cancel
+</button>
+
+</div>
+
+</div>
+<audio id="notificationSound" preload="auto">
+    <source src="sounds/message.mp3" type="audio/mpeg">
+</audio>
+
+</body>
+</html>
