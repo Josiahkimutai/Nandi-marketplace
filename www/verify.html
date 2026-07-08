@@ -259,7 +259,10 @@
       Clear photos only.
     </div>
   </div>
-
+<script src="auth.js"></script>
+<script>
+  protectPage();
+</script>
   <script>
     const supabaseUrl = "https://wfbepkegbtxszhhozqtz.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"; // put your real anon key here
@@ -362,17 +365,47 @@
         const back = document.getElementById("back").files[0];
         const selfie = document.getElementById("selfie").files[0];
 
-        if (!front || !back || !selfie) {
-          alert("Upload all 3 images");
-          return;
-        }
+       if (!front) {
+ alert("Upload ID front");
+ return;
+}
 
         submitBtn.disabled = true;
         progressText.innerText = "Uploading images...";
 
-        const frontUrl = await uploadFile(front, "front");
-        const backUrl = await uploadFile(back, "back");
-        const selfieUrl = await uploadFile(selfie, "selfie");
+const frontUrl = await uploadFile(front, "front");
+progressText.innerText = "Checking ID...";
+const formData = new FormData();
+formData.append("idImage", front);
+formData.append("selfieImage", selfie);
+formData.append("userId", user.id);
+
+const response = await fetch("https://mpesa-backend-k7ly.onrender.com/verify-id", {
+    method: "POST",
+    body: formData
+});
+
+const ai = await response.json();
+console.log("AI RESPONSE:", ai);
+if (!ai.success) {
+    throw new Error(ai.message || "AI verification failed");
+}
+
+if (!ai.verified) {
+    throw new Error("ID details do not match your account.");
+}
+let backUrl = null;
+let selfieUrl = null;
+
+
+if(back){
+    backUrl = await uploadFile(back, "back");
+}
+
+
+if(selfie){
+    selfieUrl = await uploadFile(selfie, "selfie");
+}
 
         progressText.innerText = "Submitting...";
 
@@ -436,33 +469,37 @@
     }
 
     loadVerificationStatus();
-    window.addEventListener("beforeunload", () => {
+ window.addEventListener("beforeunload", () => {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  sb.from("users")
     .update({
       online: false,
       last_seen: new Date().toISOString()
     })
     .eq("id", user.id);
 });
-function updatePresence() {
+async function updatePresence() {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  const { error } = await sb
+    .from("users")
     .update({
       online: true,
       last_seen: new Date().toISOString()
     })
     .eq("id", user.id);
+
+  if (error) {
+    console.error("Presence update failed:", error);
+  } else {
+    console.log("Presence updated successfully");
+  }
 }
 
-// run immediately when page loads
 updatePresence();
-
-// keep updating every 15 seconds
 setInterval(updatePresence, 15000);
   </script>
   <script src="tokenEngine.js"></script>
@@ -470,6 +507,6 @@ setInterval(updatePresence, 15000);
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
 
-<script src="notifications.js"></script>
+<script src="notifications.js"></script><script src="js/native.js"></script>
 </body>
 </html>

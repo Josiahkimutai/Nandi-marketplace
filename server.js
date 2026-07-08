@@ -626,11 +626,7 @@ console.log("OCR RESULT:", result);
         console.log(result.text);
         console.log("Confidence:", result.confidence);
 const text = result.text.toUpperCase();
-console.log("OCR TEXT:", text);
-console.log("DATABASE NAME:", dbName);
-console.log("DATABASE ID:", dbId);
-console.log("NAME MATCH:", nameMatch);
-console.log("ID MATCH:", idMatch);
+
 // Find the user
 const { data: user, error } = await supabase
     .from("users")
