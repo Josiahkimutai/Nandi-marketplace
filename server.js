@@ -4,10 +4,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { readID } = require("./ai/ocr");
-const { initializeApp, cert } = require("firebase-admin/app");
 const { getMessaging } = require("firebase-admin/messaging");
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
@@ -17,6 +14,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 const upload = multer({
   dest: "uploads/"
 });
@@ -47,10 +47,7 @@ const supabase = createClient(
 /* ==========================================
    FIREBASE ADMIN
 ========================================== */
-
-initializeApp({
-  credential: cert(serviceAccount)
-});/* ==========================================
+/* ==========================================
    SEND PUSH NOTIFICATION
 ========================================== */
 
@@ -652,7 +649,11 @@ const dbId = String(user.id_number).replace(/\D/g, "");
 // Does OCR text contain the database values?
 const nameMatch = text.includes(dbName);
 const idMatch = text.includes(dbId);
-if (nameMatch && idMatch) {
+if (
+ nameMatch &&
+ idMatch &&
+ result.confidence >= 85
+) {
 
     await supabase
         .from("users")
