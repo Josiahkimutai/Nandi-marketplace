@@ -386,13 +386,14 @@ const response = await fetch("https://mpesa-backend-k7ly.onrender.com/verify-id"
 });
 
 const ai = await response.json();
+const verificationStatus = ai.verified ? "verified" : "pending";
 console.log("AI RESPONSE:", ai);
 if (!ai.success) {
     throw new Error(ai.message || "AI verification failed");
 }
 
 if (!ai.verified) {
-    throw new Error("ID details do not match your account.");
+    throw new Error("Your ID could not be verified automatically.");
 }
 let backUrl = null;
 let selfieUrl = null;
@@ -416,7 +417,7 @@ if(selfie){
               id_front: frontUrl,
               id_back: backUrl,
               face_image: selfieUrl,
-              status: "pending",
+            status: verificationStatus,
               created_at: new Date().toISOString()
             })
             .eq("id", currentVerification.id);
@@ -433,7 +434,7 @@ if(selfie){
               id_front: frontUrl,
               id_back: backUrl,
               face_image: selfieUrl,
-              status: "pending"
+              status: verificationStatus,
             });
 
           if (insertError) {
@@ -445,14 +446,20 @@ if(selfie){
         // optional: if your users table has verification_status column
         const { error: userUpdateError } = await sb
           .from("users")
-          .update({ verification_status: "pending" })
+          .update({
+    verification_status: verificationStatus
+})
           .eq("id", user.id);
 
         if (userUpdateError) {
           console.warn("users.verification_status update skipped:", userUpdateError.message);
         }
 
-        setStatus("pending", "Verification submitted");
+        if (verificationStatus === "verified") {
+    setStatus("verified", "Your identity has been verified successfully.");
+} else {
+    setStatus("pending", "Verification pending review.");
+}
         disableForm(true);
         progressText.innerText = "";
 
