@@ -909,7 +909,7 @@ opacity:1;
     <button class="cat-btn" onclick="filterFeed('property')">
         <span class="cat-badge" id="count-property">0</span>
         <i class="fa-solid fa-house"></i>
-        <small>Estate</small>
+        <small>Rentals</small>
     </button>
 
     <button class="cat-btn" onclick="filterFeed('services')">
@@ -1002,7 +1002,8 @@ const sb = supabase.createClient(
 );
 const likeSound = new Audio("sounds/like.mp3");
 const user = JSON.parse(localStorage.getItem("agrihub_user") || "null");
-window.sb = sb;
+console.log("Dashboard user:", localStorage.getItem("agrihub_user"));
+
 window.user = user;
 async function setUserOnline(status) {
 
@@ -1082,6 +1083,7 @@ async function getBuyerLocation() {
 ========================= */
 
 let allProducts = [];
+let currentImage = "";
 console.log(allProducts);
 
 /* =========================
@@ -1204,24 +1206,21 @@ function updateVerificationUI(status) {
 async function loadFeed() {
 cachedFeed = allProducts.slice(0, 10); // keep latest 10 only
 localStorage.setItem("agrihub_cached_feed", JSON.stringify(cachedFeed));
-  const { data, error } = await sb
+const { data, error } = await sb
     .from("products")
     .select("*")
     .order("created_at", { ascending: false });
+console.log("Products:", data);
+console.log("Error:", error);
 
-  if (error) {
+if (error) {
     console.error(error);
     return;
-  }
+}
 
-  allProducts = data || [];
+allProducts = data || [];
 
-  updateStats(allProducts);
-  renderFeed(allProducts);
-  updateListingsBadge(allProducts);
-  allProducts = data || [];
-
-cacheFeed(allProducts); // ✅ important fix
+cacheFeed(allProducts);
 
 updateStats(allProducts);
 renderFeed(allProducts);
@@ -1416,9 +1415,19 @@ let gallery = "";
 // Collect all available images
 let images = [];
 
-if (Array.isArray(p.image_urls) && p.image_urls.length > 0) {
-    images = p.image_urls.filter(url => url && url.trim() !== "");
-} else if (p.image_url && p.image_url.trim() !== "") {
+if (Array.isArray(p.image_urls)) {
+    images = p.image_urls;
+} 
+else if (typeof p.image_urls === "string") {
+    try {
+        const parsed = JSON.parse(p.image_urls);
+        images = Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        images = [];
+    }
+}
+
+if (!images.length && p.image_url) {
     images = [p.image_url];
 }
 
@@ -1428,7 +1437,7 @@ gallery = images.map(url => `
         src="${url}"
         loading="lazy"
         alt="${p.name}"
-        onclick="openImageViewer('${url}')"
+        onclick="openImageViewer(${JSON.stringify(images).replace(/"/g,"&quot;")}, ${images.indexOf(url)})"
         style="cursor:pointer;"
     >
 `).join("");
@@ -1608,13 +1617,8 @@ function filterFeed(cat) {
 ========================= */
 function logout() {
   localStorage.removeItem("agrihub_user");
-  window.location.href = "index.html";
+window.location.replace("index.html");
 }
-function logout() {
-  localStorage.removeItem("agrihub_user");
-  window.location.href = "index.html";
-}
-
 
 /* =========================
    OPEN CHAT
@@ -1760,10 +1764,44 @@ window.addEventListener("scroll", function () {
 function closeVerifyPopup() {
   document.getElementById("verifyPopup").style.display = "none";
 }
-function openImageViewer(src){
+function openImageViewer(images, startIndex = 0){
+currentImage = images[startIndex];
+    const viewer = document.getElementById("imageViewer");
+    const gallery = document.getElementById("viewerGallery");
 
-    document.getElementById("viewerImage").src = src;
-    document.getElementById("imageViewer").style.display = "flex";
+    gallery.innerHTML = "";
+
+    images.forEach(src=>{
+
+        const slide = document.createElement("div");
+
+        slide.style.cssText=`
+            min-width:100%;
+            height:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            scroll-snap-align:start;
+        `;
+
+        slide.innerHTML=`
+            <img src="${src}"
+            style="
+            max-width:100%;
+            max-height:100%;
+            object-fit:contain;
+            ">
+        `;
+
+        gallery.appendChild(slide);
+
+    });
+
+    viewer.style.display="block";
+
+    setTimeout(()=>{
+        gallery.scrollLeft=gallery.clientWidth*startIndex;
+    },20);
 
 }
 
@@ -1980,19 +2018,27 @@ function closeTokenPopup() {
 }
 (async () => {
 
-    await setUserOnline(true);
+    // Update online status (don't block loading)
+    setUserOnline(true);
 
-    await loadUser();
-    await loadVerification();
-    await loadVerifiedUsers();
+    // Start loading the feed immediately
+    smartLoadFeed();
 
-    try{
-        await getBuyerLocation();
-    }catch(e){}
+    // Load other information in parallel
+    loadUser();
+    loadVerification();
+    loadVerifiedUsers();
+    syncOfflineTokens();
+    loadUnreadMessages();
 
-    await syncOfflineTokens();
-    await smartLoadFeed();
-    await loadUnreadMessages();
+    // Get GPS in the background
+    getBuyerLocation()
+        .then(() => {
+            renderFeed(allProducts); // refresh distances once location is known
+        })
+        .catch(() => {
+            console.log("Location unavailable.");
+        });
 
 })();
 function updatePresence() {
@@ -2093,6 +2139,18 @@ function cacheFeed(products) {
 
     localStorage.setItem("agrihub_cached_feed", JSON.stringify(payload));
 }
+document.getElementById("downloadImageBtn").addEventListener("click", () => {
+
+    if (!currentImage) return;
+
+    const a = document.createElement("a");
+    a.href = currentImage;
+    a.download = "AgriHub_Image";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+});
 </script>
 <!-- VERIFY POPUP -->
 <div id="verifyPopup" style="
@@ -2152,23 +2210,15 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,.95);
-justify-content:center;
-align-items:center;
+background:#000;
 z-index:999999;
-">
-
-<img id="viewerImage" style="
-max-width:95%;
-max-height:95%;
-border-radius:12px;
-object-fit:contain;
 ">
 
 <button onclick="closeImageViewer()" style="
 position:absolute;
 top:20px;
 right:20px;
+z-index:10;
 background:#fff;
 border:none;
 width:42px;
@@ -2176,10 +2226,35 @@ height:42px;
 border-radius:50%;
 font-size:22px;
 cursor:pointer;
-font-weight:bold;
 ">
 ✕
 </button>
+<button id="downloadImageBtn" style="
+position:absolute;
+top:20px;
+left:20px;
+background:#1f8f4e;
+color:#fff;
+border:none;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+z-index:10;
+">
+<i class="fa fa-download"></i> Download
+</button>
+
+
+<div id="viewerGallery" style="
+display:flex;
+height:100%;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-behavior:smooth;
+">
+
+</div>
 
 </div>
 <div id="tokenPopup" style="
@@ -2245,11 +2320,6 @@ Cancel
 <audio id="notificationSound" preload="auto">
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
-<script src="tokenEngine.js"></script>
-<audio id="notificationSound" preload="auto">
-    <source src="sounds/message.mp3" type="audio/mpeg">
-</audio>
 
-<script src="notifications.js"></script>
 </body>
 </html>

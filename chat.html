@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -168,8 +169,17 @@ body{
     font-size:11px;
     color:#777;
     margin-top:6px;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:4px;
 }
 
+.ticks{
+    font-size:12px;
+    color:#777;
+    font-weight:bold;
+}
 /* INPUT */
 
 .input-box{
@@ -249,7 +259,21 @@ body{
 }
 
 /* MOBILE */
+/* MESSAGE SELECTION MODE */
 
+
+.selection-bar button{
+    border:none;
+    background:#d32f2f;
+    color:white;
+    padding:10px 15px;
+    border-radius:20px;
+    cursor:pointer;
+}
+
+.msg-row.selected .msg{
+    outline:3px solid #25d366;
+}
 @media(max-width:768px){
 
 .chat-wrapper{
@@ -274,12 +298,51 @@ body{
 }
 
 }
+
+
+/* MESSAGE SELECTION MODE */
+
+.selection-bar{
+    height:60px;
+    background:#075e54;
+    color:white;
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 15px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.selection-bar button{
+    border:none;
+    background:#d32f2f;
+    color:white;
+    padding:10px 15px;
+    border-radius:20px;
+    cursor:pointer;
+}
+
+.msg-row.selected .msg{
+    outline:3px solid #25d366;
+}
   </style>
 </head>
 
 <body>
 
 <div class="chat-wrapper">
+  <div class="selection-bar" id="selectionBar">
+
+<span id="selectedCount">
+0 selected
+</span>
+
+<button onclick="deleteSelectedMessages()">
+🗑 Delete
+</button>
+
+</div>
   <div class="header">
 
     <button class="back-btn" onclick="history.back()">←</button>
@@ -325,8 +388,15 @@ id="sendBtn">
 
 </div>
 </div>
+<script src="auth.js"></script>
 
 <script>
+protectPage();
+
+/* =========================================================
+   IMPORTANT:
+========================================================= */
+
 /* =========================================================
    IMPORTANT:
    USE THE EXACT SAME URL + ANON KEY IN ALL YOUR FILES
@@ -369,7 +439,8 @@ const chatBox = document.getElementById("chatBox");
 const msgInput = document.getElementById("msgInput");
 let typingTimeout = null;
 const sendBtn = document.getElementById("sendBtn");
-
+let selectedMessages = new Set();
+let selectionMode = false;
 /* SAFE HTML */
 function escapeHtml(text){
   return String(text || "")
@@ -406,35 +477,129 @@ function formatTime(dateString){
     minute: "2-digit"
   });
 }
-
 /* SHOW ERROR ON SCREEN */
 function showError(message){
   chatBox.innerHTML = `<div class="empty-chat">${message}</div>`;
 }
-function appendMessage(m) {
 
-  // Remove "No messages yet" if it exists
-  const empty = chatBox.querySelector(".empty-chat");
-  if (empty) empty.remove();
 
-  const mine = String(m.sender_id) === String(user.id);
+/* CREATE MESSAGE ROW */
+function createMessageRow(m){
 
-  const row = document.createElement("div");
-  row.className = "msg-row " + (mine ? "me" : "other");
+    const mine = String(m.sender_id) === String(user.id);
 
-  row.innerHTML = `
-    <div class="msg ${mine ? "me" : "other"}">
-      <div class="msg-text">${escapeHtml(m.message || "")}</div>
-      <div class="time">${formatTime(m.created_at)}</div>
-    </div>
-  `;
+    const row = document.createElement("div");
+    row.id = "msg-" + m.id;
+    row.className = "msg-row " + (mine ? "me" : "other");
 
-  chatBox.appendChild(row);
-  chatBox.scrollTop = chatBox.scrollHeight;
+    row.innerHTML = `
+        <div class="msg ${mine ? "me" : "other"}">
+            <div class="msg-text">${escapeHtml(m.message || "")}</div>
+            <div class="time">
+    ${formatTime(m.created_at)}
+    ${mine ? '<span class="ticks" id="ticks-' + m.id + '">✓</span>' : ''}
+</div>
+        </div>
+    `;
 
-  if (!mine) {
-    markAsRead();
-  }
+    // Desktop right click
+    row.addEventListener("contextmenu", function(e){
+        e.preventDefault();
+        selectMessage(row, m);
+    });
+
+    let pressTimer = null;
+    let longPressed = false;
+
+    // Mobile long press
+    row.addEventListener("touchstart", function(){
+
+        longPressed = false;
+
+        clearTimeout(pressTimer);
+
+        pressTimer = setTimeout(function(){
+
+            longPressed = true;
+
+            if(navigator.vibrate){
+                navigator.vibrate(40);
+            }
+
+            selectMessage(row, m);
+
+        },600);
+
+    }, {passive:true});
+
+    row.addEventListener("touchmove", function(){
+        clearTimeout(pressTimer);
+    });
+
+    row.addEventListener("touchcancel", function(){
+        clearTimeout(pressTimer);
+    });
+
+    row.addEventListener("touchend", function(e){
+
+        clearTimeout(pressTimer);
+
+        if(longPressed){
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+    }, {passive:false});
+
+    // Normal tap while selection mode is active
+    row.addEventListener("click", function(e){
+
+        if(longPressed){
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        if(selectionMode){
+            e.preventDefault();
+            selectMessage(row,m);
+        }
+
+    });
+
+    return row;
+}
+
+
+
+/* APPEND NEW MESSAGE */
+function appendMessage(m){
+
+    const empty = chatBox.querySelector(".empty-chat");
+
+    if(empty){
+        empty.remove();
+    }
+
+
+    const row = createMessageRow(m);
+
+
+    chatBox.appendChild(row);
+
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+
+    const mine = String(m.sender_id) === String(user.id);
+
+
+    if(!mine){
+
+        markAsRead();
+
+    }
+
 }
 /* MARK OTHER PERSON'S MESSAGES AS READ */
 /* MARK OTHER PERSON'S MESSAGES AS READ */
@@ -464,9 +629,7 @@ async function markAsRead() {
 
     console.log("Rows updated:", data);
 
-    if (error) {
-        console.error(error);
-    }
+  updateMessageTicks();
 }
 window.addEventListener("messagesUpdated", () => {
     loadUnreadMessages();
@@ -496,7 +659,7 @@ async function loadMessages(){
   try{
     const { data, error } = await sb2
       .from("messages")
-      .select("id, conversation_id, sender_id, message, created_at, is_read")
+      .select("id, conversation_id, sender_id, message, created_at, is_read, deleted_for_sender, deleted_for_receiver, deleted_for_everyone")
       .eq("conversation_id", chatId)
       .order("created_at", { ascending: true });
 
@@ -511,32 +674,26 @@ async function loadMessages(){
       return;
     }
 
-    chatBox.innerHTML = "";// If messages are already displayed, don't rebuild everything.
-if (chatBox.children.length > 0) {
-  return;
-}
-
 chatBox.innerHTML = "";
     if(!data || data.length === 0){
       chatBox.innerHTML = `<div class="empty-chat">No messages yet. Start the conversation.</div>`;
       return;
     }
+data.forEach(m => {
 
-    data.forEach(m => {
-      const mine = String(m.sender_id) === String(user.id);
+if (m.deleted_for_everyone) return;
 
-      const row = document.createElement("div");
-      row.className = "msg-row " + (mine ? "me" : "other");
+const mine = String(m.sender_id) === String(user.id);
 
-      row.innerHTML = `
-        <div class="msg ${mine ? "me" : "other"}">
-          <div class="msg-text">${escapeHtml(m.message || "")}</div>
-          <div class="time">${formatTime(m.created_at)}</div>
-        </div>
-      `;
+if (mine && m.deleted_for_sender) return;
 
-      chatBox.appendChild(row);
-    });
+if (!mine && m.deleted_for_receiver) return;
+
+const row = createMessageRow(m);
+
+chatBox.appendChild(row);
+
+});
 
     chatBox.scrollTop = chatBox.scrollHeight;
     await markAsRead();
@@ -556,7 +713,27 @@ async function sendMessage(){
   sendBtn.textContent = "Sending...";
 
   try{
- const { data: insertedMessage, error } = await sb2
+    // CHECK IF CONVERSATION EXISTS
+const { data: existingConversation } = await sb2
+.from("conversations")
+.select("id")
+.eq("id", chatId)
+.maybeSingle();
+
+
+if(!existingConversation){
+
+  await sb2
+  .from("conversations")
+  .insert([{
+      id: chatId,
+      user1: user.id,
+      user2: chatUser,
+      updated_at: new Date().toISOString()
+  }]);
+
+}
+const { data: insertedMessage, error } = await sb2
   .from("messages")
   .insert([{
     conversation_id: chatId,
@@ -568,20 +745,33 @@ async function sendMessage(){
   .select()
   .single();
 
-    if(error){
-      console.error("SEND MESSAGE ERROR:", error);
+if (error) {
+  console.error("SEND MESSAGE ERROR:", error);
 
-      if(error.code === "PGRST301" || error.message?.includes("JWT") || error.message?.includes("Unauthorized")){
-        alert("Unauthorized Supabase key. Replace your anon key in chat.html.");
-      }else{
-        alert("Failed to send message");
-      }
+  if (
+    error.code === "PGRST301" ||
+    error.message?.includes("JWT") ||
+    error.message?.includes("Unauthorized")
+  ) {
+    alert("Unauthorized Supabase key. Replace your anon key in chat.html.");
+  } else {
+    alert("Failed to send message");
+  }
 
-      sendBtn.disabled = false;
-      sendBtn.textContent = "Send";
-      return;
-    }
+  sendBtn.disabled = false;
+  sendBtn.textContent = "Send";
+  return;
+}
 
+// Increment unread count for the receiver
+const { error: unreadError } = await sb2.rpc("increment_unread", {
+  conv_id: chatId,
+  sender: user.id
+});
+
+if (unreadError) {
+  console.error("Increment unread error:", unreadError);
+}
     msgInput.value = "";
     await fetch("https://mpesa-backend-k7ly.onrender.com/send-chat-notification", {
   method: "POST",
@@ -598,13 +788,6 @@ async function sendMessage(){
 });
     await setTyping(false);
     await touchConversation();
-    appendMessage({
-  id: Date.now(), // temporary id
-  sender_id: user.id,
-  message: text,
-  created_at: new Date().toISOString()
-});
-
   }catch(err){
     console.error("SEND MESSAGE CATCH:", err);
     alert("Failed to send message");
@@ -636,8 +819,7 @@ msgInput.addEventListener("keydown", function(e){
 sendBtn.addEventListener("click", sendMessage);
 
 /* INIT */
-setHeaderName();
-loadMessages();
+
 window.addEventListener("DOMContentLoaded", () => {
   setHeaderName();
   loadMessages();
@@ -647,35 +829,107 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 /* REALTIME (optional - if realtime fails, chat still works) */
-try{
- const chatChannel = sb2
-  .channel("chat-live-" + chatId)
-  .on(
-    "postgres_changes",
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "messages",
-      filter: `conversation_id=eq.${chatId}`
-    },
-  (payload) => {
+try {
 
-  // Ignore duplicates
-  if (document.getElementById("msg-" + payload.new.id)) return;
+const chatChannel = sb2
+.channel("chat-live-" + chatId)
 
-  appendMessage(payload.new);
+// NEW MESSAGE
+.on(
+"postgres_changes",
+{
+event: "INSERT",
+schema: "public",
+table: "messages",
+filter: `conversation_id=eq.${chatId}`
+},
+(payload) => {
 
-  // Mark received messages as read immediately
-  if (payload.new.sender_id !== user.id) {
-    markAsRead();
-  }
+if (document.getElementById("msg-" + payload.new.id)) return;
+
+appendMessage(payload.new);
+
+if (payload.new.sender_id != user.id){
+markAsRead();
 }
-  )
-  .subscribe((status) => {
-    console.log("Realtime status:", status);
-  });
+
+}
+)
+
+// MESSAGE UPDATED
+// MESSAGE UPDATED
+.on(
+"postgres_changes",
+{
+event:"UPDATE",
+schema:"public",
+table:"messages",
+filter:`conversation_id=eq.${chatId}`
+},
+(payload)=>{
+
+
+const updated = payload.new;
+
+
+const msg = document.getElementById(
+"msg-" + updated.id
+);
+
+
+// DELETE FOR EVERYONE
+
+if(updated.deleted_for_everyone){
+
+    if(msg){
+        msg.remove();
+    }
+
+    return;
+}
+
+
+
+// DELETE FOR ME
+
+if(
+updated.deleted_for_sender &&
+String(updated.sender_id) === String(user.id)
+){
+
+    if(msg){
+        msg.remove();
+    }
+
+    return;
+}
+
+
+
+// DELETE FOR RECEIVER
+
+if(
+updated.deleted_for_receiver &&
+String(updated.sender_id) !== String(user.id)
+){
+
+    if(msg){
+        msg.remove();
+    }
+
+    return;
+}
+
+
+}
+)
+
+.subscribe((status)=>{
+console.log(status);
+});
+
 }catch(err){
-  console.warn("Realtime could not start:", err);
+console.log(err);
 }
 async function loadUserStatus() {
   if (!chatUser) {
@@ -703,14 +957,17 @@ async function loadUserStatus() {
       return;
     }
 
-    if (data.typing) {
-  statusEl.innerText = "✍️ Typing...";
+ if (data.typing) {
+    statusEl.innerText = "✍️ Typing...";
+    updateMessageTicks();
 }
 else if (data.online) {
-  statusEl.innerText = "🟢 Online";
+    statusEl.innerText = "🟢 Online";
+   updateMessageTicks();
 }
 else {
-  statusEl.innerText = "Last seen " + formatLastSeen(data.last_seen);
+    statusEl.innerText = "Last seen " + formatLastSeen(data.last_seen);
+    updateMessageTicks(false);
 }
 
   } catch (err) {
@@ -762,11 +1019,201 @@ async function setTyping(isTyping) {
     console.error("Typing update failed:", error);
   }
 }
+function openDeleteMenu(message) {
+
+    if(String(message.sender_id) === String(user.id)){
+
+        if(confirm("Delete this message for everyone?")){
+
+            deleteForEveryone(message.id);
+
+        }
+
+    }else{
+
+        if(confirm("Delete this message for you?")){
+
+            deleteForMe(message.id);
+
+        }
+
+    }
+
+}
+function selectMessage(row,message){
+
+    const id = message.id;
+
+
+    if(selectedMessages.has(id)){
+
+        selectedMessages.delete(id);
+        row.classList.remove("selected");
+
+    }else{
+
+        selectedMessages.add(id);
+        row.classList.add("selected");
+
+    }
+
+
+    selectionMode = selectedMessages.size > 0;
+
+
+    const bar=document.getElementById("selectionBar");
+    const count=document.getElementById("selectedCount");
+
+
+    if(selectionMode){
+
+        bar.style.display="flex";
+        count.innerText=
+        selectedMessages.size+" selected";
+
+    }else{
+
+        bar.style.display="none";
+
+    }
+
+}async function deleteSelectedMessages(){
+
+    if(selectedMessages.size===0) return;
+
+    for(const id of selectedMessages){
+
+        const {data:message}=await sb2
+        .from("messages")
+        .select("sender_id")
+        .eq("id",id)
+        .single();
+
+        let updateData={};
+
+        if(String(message.sender_id)===String(user.id)){
+            updateData.deleted_for_sender=true;
+        }else{
+            updateData.deleted_for_receiver=true;
+        }
+
+        await sb2
+        .from("messages")
+        .update(updateData)
+        .eq("id",id);
+
+        const row=document.getElementById("msg-"+id);
+
+        if(row) row.remove();
+    }
+
+    selectedMessages.clear();
+    selectionMode=false;
+
+    document.getElementById("selectionBar").style.display="none";
+    document.getElementById("selectedCount").innerText="0 selected";
+}
+async function deleteForMe(messageId) {
+
+    const message = await sb2
+        .from("messages")
+        .select("sender_id")
+        .eq("id", messageId)
+        .single();
+
+    if (message.error) {
+        console.error(message.error);
+        return;
+    }
+
+    let updateData = {};
+
+    if (String(message.data.sender_id) === String(user.id)) {
+        updateData.deleted_for_sender = true;
+    } else {
+        updateData.deleted_for_receiver = true;
+    }
+
+    const { error } = await sb2
+        .from("messages")
+        .update(updateData)
+        .eq("id", messageId);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const msg = document.getElementById("msg-" + messageId);
+    if (msg) msg.remove();
+}async function deleteForEveryone(messageId) {
+
+    const { error } = await sb2
+        .from("messages")
+        .update({
+            deleted_for_everyone: true
+        })
+        .eq("id", messageId);
+
+    if (error) {
+        console.error(error);
+        return;
+    }
+
+    const msg = document.getElementById("msg-" + messageId);
+    if (msg) msg.remove();
+
+  }
+  function updateMessageTicks() {
+
+    document.querySelectorAll(".ticks").forEach(async (tick) => {
+
+        const messageId = tick.id.replace("ticks-", "");
+
+        const { data, error } = await sb2
+            .from("messages")
+            .select("is_read")
+            .eq("id", messageId)
+            .single();
+
+        if (error || !data) return;
+
+        if (data.is_read) {
+
+            tick.innerHTML = "✓✓";
+            tick.style.color = "#2196f3"; // blue
+
+        } else {
+
+            const { data: userStatus } = await sb2
+                .from("users")
+                .select("online")
+                .eq("id", chatUser)
+                .single();
+
+            if (userStatus?.online) {
+
+                tick.innerHTML = "✓✓";
+                tick.style.color = "#777"; // grey
+
+            } else {
+
+                tick.innerHTML = "✓";
+                tick.style.color = "#777"; // grey
+
+            }
+        }
+
+    });
+
+}
 </script>
 <audio id="notificationSound" preload="auto">
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
 
 <script src="notifications.js"></script>
+<script src="js/native.js"></script>
+
 </body>
 </html>

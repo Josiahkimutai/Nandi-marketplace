@@ -267,7 +267,6 @@ id="idNumber"
 placeholder="Enter ID Number">
 
 </div>
-
 <div class="input-group">
 
 <label>Password</label>
@@ -277,6 +276,18 @@ type="password"
 id="password"
 placeholder="Enter Password">
 
+</div>
+
+<div style="text-align:right;margin:8px 0 15px;">
+    <a href="forgotpassword.html"
+       style="
+          color:#8BFFB6;
+          text-decoration:none;
+          font-size:13px;
+          font-weight:bold;
+       ">
+        Forgot Password?
+    </a>
 </div>
 
 <button
@@ -314,7 +325,21 @@ Version 1.0
 </div>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+// AUTO LOGIN
+const savedUser = localStorage.getItem("agrihub_user");
+console.log("Saved user:", savedUser);
+if (savedUser) {
+    try {
+        const user = JSON.parse(savedUser);
 
+        if (user && user.id) {
+            window.location.replace("farmerdashboard.html");
+            return;
+        }
+    } catch (e) {
+        localStorage.removeItem("agrihub_user");
+    }
+}
     // ==========================
     // SUPABASE
     // ==========================
@@ -425,7 +450,6 @@ localStorage.setItem(
     "agrihub_user",
     JSON.stringify(data)
 );
-localStorage.setItem("agrihub_user", JSON.stringify(data));
 
 // 🔥 IMPORTANT: trigger pending FCM sync
 const pending = localStorage.getItem("pending_fcm_token");

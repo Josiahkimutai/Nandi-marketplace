@@ -157,7 +157,10 @@ body{
 <div class="list" id="list">
   <div class="loading">Loading...</div>
 </div>
-
+<script src="auth.js"></script>
+<script>
+  protectPage();
+</script>
 <script>
 const sb2 = supabase.createClient(
   "https://wfbepkegbtxszhhozqtz.supabase.co",
@@ -181,51 +184,13 @@ function getOtherUser(conv){
 }
 
 /* GET REAL USER NAME FROM profiles */
-async function getUserName(otherUserId){
-  console.log("========== NAME DEBUG START ==========");
-  console.log("otherUserId from conversation:", otherUserId);
+function getUserNameFromConversation(conv){
 
-  try {
-    // 1) CHECK users TABLE
-    const { data: userRow, error: userErr } = await sb2
-      .from("users")
-      .select("*")
-      .eq("id", otherUserId)
-      .maybeSingle();
-
-    console.log("USERS RESULT:", userRow);
-    console.log("USERS ERROR:", userErr);
-
-    // 2) CHECK profiles TABLE USING SAME ID
-    const { data: profileRow, error: profileErr } = await sb2
-      .from("profiles")
-      .select("*")
-      .eq("id", otherUserId)
-      .maybeSingle();
-
-    console.log("PROFILES RESULT:", profileRow);
-    console.log("PROFILES ERROR:", profileErr);
-
-    // 3) CHECK products TABLE USING user_id
-    const { data: productRows, error: productErr } = await sb2
-      .from("products")
-      .select("*")
-      .eq("user_id", otherUserId)
-      .limit(5);
-
-    console.log("PRODUCTS RESULT:", productRows);
-    console.log("PRODUCTS ERROR:", productErr);
-
-    // 4) TEMP RETURN SO PAGE STILL WORKS
-    if (userRow?.full_name) return userRow.full_name;
-    if (profileRow?.full_name) return profileRow.full_name;
-    if (profileRow?.name) return profileRow.name;
-
-    return "Unknown User";
-  } catch (err) {
-    console.error("GET USER NAME CATCH:", err);
-    return "Unknown User";
+  if(String(conv.user1) === String(user.id)){
+      return conv.user2_data?.full_name || "Unknown User";
   }
+
+  return conv.user1_data?.full_name || "Unknown User";
 }
 /* INITIALS */
 function getInitials(name){
@@ -294,18 +259,27 @@ async function loadInbox() {
   inboxRendering = true;
 
   try {
-    const { data, error } = await sb2
-      .from("conversations")
-      .select("*")
-      .or(`user1.eq.${user.id},user2.eq.${user.id}`)
-      .order("updated_at", { ascending: false });
+ const { data, error } = await sb2
+  .from("conversations")
+  .select(`
+    id,
+    user1,
+    user2,
+    last_message,
+    last_message_time,
+    user1_unread,
+    user2_unread,
+    updated_at
+  `)
+  .or(`user1.eq.${user.id},user2.eq.${user.id}`)
+  .order("updated_at", { ascending: false });;
 
     if (error) {
       console.error(error);
       list.innerHTML = `<div class="empty">Error loading messages</div>`;
       return;
     }
-
+console.log("Conversations:", data);
     if (myVersion !== inboxVersion) return; // ⛔ outdated request
 
     if (!data || data.length === 0) {
@@ -314,22 +288,53 @@ async function loadInbox() {
     }
 
     // IMPORTANT: build everything first (no flicker)
-    const fragments = [];
+ const fragments = [];
 
-    for (const c of data) {
-      const otherUserId = getOtherUser(c);
+for (const c of data) {
 
-      const [realName, lastMsg, unreadCount] = await Promise.all([
-        getUserName(otherUserId),
-        getLastMessage(c.id),
-        getUnreadCount(c.id)
-      ]);
+    console.log("Building conversation:", c);
+const { data: latestMessage, error: latestError } = await sb2
+  .from("messages")
+  .select("message, created_at")
+  .eq("conversation_id", c.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
 
-      const initials = getInitials(realName);
+console.log("Latest message:", latestMessage);
+console.log("Latest error:", latestError);
+    const otherUserId = getOtherUser(c);
+const { data: otherUser } = await sb2
+  .from("users")
+  .select("full_name")
+  .eq("id", otherUserId)
+  .maybeSingle();
 
+
+const realName = otherUser?.full_name || "Unknown User";
+
+    // rest of your code...
+
+
+const lastMsg = latestMessage;
+
+const { count: unreadCount, error: unreadError } = await sb2
+  .from("messages")
+  .select("*", { count: "exact", head: true })
+  .eq("conversation_id", c.id)
+  .neq("sender_id", user.id)
+  .eq("is_read", false);
+
+if(unreadError){
+  console.error("Unread count error:", unreadError);
+}
+const initials = getInitials(realName);
     fragments.push(`
-  <div class="chat" onclick="openChat('${c.id}', '${otherUserId}', '${realName.replace(/'/g, "\\'")}')">
-
+<div
+class="chat"
+data-id="${c.id}"
+onclick="openChat('${c.id}', '${otherUserId}', '${realName.replace(/'/g, "\\'")}')"
+oncontextmenu="event.preventDefault();showDeleteConversation('${c.id}')">
     <div class="avatar">${initials}</div>
 
     <div class="chat-content">
@@ -355,7 +360,31 @@ async function loadInbox() {
 
     // ⚡ ONE DOM UPDATE ONLY (no blinking)
     list.innerHTML = fragments.join("");
+document.querySelectorAll(".chat").forEach(chat => {
 
+    let timer;
+
+    chat.addEventListener("touchstart", () => {
+
+        timer = setTimeout(() => {
+
+            const conversationId = chat.getAttribute("data-id");
+
+            showDeleteConversation(conversationId);
+
+        }, 700);
+
+    });
+
+    chat.addEventListener("touchend", () => {
+        clearTimeout(timer);
+    });
+
+    chat.addEventListener("touchmove", () => {
+        clearTimeout(timer);
+    });
+
+});
   } finally {
     inboxRendering = false;
   }
@@ -430,40 +459,79 @@ sb2.channel("inbox-live")
     })
     .eq("id", user.id);
 });
-function updatePresence() {
+async function updatePresence() {
+
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  const { error } = await sb2
+    .from("users")
     .update({
       online: true,
       last_seen: new Date().toISOString()
     })
     .eq("id", user.id);
-}
-window.addEventListener("storage", (e) => {
-  if (e.key === "refreshInbox") {
-    loadInbox();
-  }
-});
 
-// run immediately when page loads
+  if (error) {
+    console.error("Presence update failed:", error);
+  } else {
+    console.log("Presence updated successfully");
+  }
+}
+
+// Run immediately
 updatePresence();
 
-// keep updating every 15 seconds
+// Keep alive
 setInterval(updatePresence, 2000);
+
 document.addEventListener("click", () => {
   notificationSound.play().then(() => {
     notificationSound.pause();
     notificationSound.currentTime = 0;
   }).catch(() => {});
 }, { once: true });
+async function deleteConversation(conversationId) {
+
+  // Delete all messages
+  const { error: msgError } = await sb2
+    .from("messages")
+    .delete()
+    .eq("conversation_id", conversationId);
+
+  if (msgError) {
+    console.error(msgError);
+    alert("Failed to delete messages.");
+    return;
+  }
+
+  // Delete conversation
+  const { error: convError } = await sb2
+    .from("conversations")
+    .delete()
+    .eq("id", conversationId);
+
+  if (convError) {
+    console.error(convError);
+    alert("Failed to delete conversation.");
+    return;
+  }
+
+  loadInbox();
+}
+function showDeleteConversation(conversationId) {
+
+    if (confirm("Delete this conversation permanently?")) {
+        deleteConversation(conversationId);
+    }
+
+}
 </script>
 <script src="tokenEngine.js"></script>
 <audio id="notificationSound" preload="auto">
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
-
+<script src="js/native.js"></script>
 
 </body>
 </html>

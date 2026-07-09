@@ -149,7 +149,10 @@ body{
 <div class="container" id="listings">
   <div class="empty">Loading your listings...</div>
 </div>
-
+<script src="auth.js"></script>
+<script>
+  protectPage();
+</script>
 <script>
 
 const sb = supabase.createClient(
@@ -187,6 +190,8 @@ async function loadMyListings(){
   data.forEach(p => {
 
     const card = document.createElement("div");
+    console.log("Product:", p);
+console.log("Image being used:", p.image_urls?.[0] || p.image_url);
     card.className = "card";
 
     card.innerHTML = `
@@ -248,36 +253,40 @@ window.addEventListener("beforeunload", () => {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+ sb.from("users")
     .update({
       online: false,
       last_seen: new Date().toISOString()
     })
     .eq("id", user.id);
 });
-function updatePresence() {
+async function updatePresence() {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  sb2.from("users")
+  const { error } = await sb
+    .from("users")
     .update({
       online: true,
       last_seen: new Date().toISOString()
     })
     .eq("id", user.id);
+
+  if (error) {
+    console.error("Presence update failed:", error);
+  } else {
+    console.log("Presence updated successfully");
+  }
 }
 
-// run immediately when page loads
 updatePresence();
-
-// keep updating every 15 seconds
-setInterval(updatePresence, 15000);
+setInterval(updatePresence, 3000);
 </script>
 <script src="tokenEngine.js"></script>
 <audio id="notificationSound" preload="auto">
     <source src="sounds/message.mp3" type="audio/mpeg">
 </audio>
-
+<script src="js/native.js"></script>
 <script src="notifications.js"></script>
 </body>
 </html>
