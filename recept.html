@@ -259,26 +259,22 @@ window.addEventListener("beforeunload", () => {
     })
     .eq("id", user.id);
 });
-async function updatePresence() {
+function updatePresence() {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
   if (!user) return;
 
-  const { error } = await sb
-    .from("users")
+  sb2.from("users")
     .update({
       online: true,
       last_seen: new Date().toISOString()
     })
     .eq("id", user.id);
-
-  if (error) {
-    console.error("Presence update failed:", error);
-  } else {
-    console.log("Presence updated successfully");
-  }
 }
 
+// run immediately when page loads
 updatePresence();
+
+// keep updating every 15 seconds
 setInterval(updatePresence, 15000);
 </script>
 <audio id="notificationSound" preload="auto">
@@ -286,6 +282,5 @@ setInterval(updatePresence, 15000);
 </audio>
 
 <script src="notifications.js"></script>
-<script src="js/native.js"></script>
 </body>
 </html>

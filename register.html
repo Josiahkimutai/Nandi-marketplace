@@ -271,9 +271,7 @@ form.addEventListener("submit", async(e)=>{
 
 const now = new Date();
 
-const { data, error } = await client
-  .from("users")
-  .insert([{
+const { error } = await client.from("users").insert([{
     full_name: fullName,
     phone: phone,
     id_number: idNumber,
@@ -281,34 +279,26 @@ const { data, error } = await client
     shopping_centre: shoppingCentre,
     password: password.trim(),
 
-    // TOKEN SYSTEM
-    token_balance: 10.42,
+    // =========================
+    // TOKEN SYSTEM START
+    // =========================
+     token_balance: 10.42,
     last_token_update: now.toISOString(),
     account_created_at: now.toISOString()
-  }])
-  .select()
-  .single();
+}]);
+  if(error){
+    show("error","Registration failed");
+    reset();
+    return;
+  }
 
-if (error) {
-  show("error", "Registration failed");
+  show("success","Account created 🎉");
+
+  setTimeout(()=>{
+    window.location.href="index.html";
+  },1500);
+
   reset();
-  return;
-}
-
-show("success", "Account created 🎉");
-
-// Automatically log the new user in
-localStorage.setItem("agrihub_user", JSON.stringify({
-    id: data.id,
-    full_name: data.full_name,
-    phone: data.phone
-}));
-
-setTimeout(() => {
-    window.location.href = "farmerdashboard.html";
-}, 1500);
-
-reset();
 });
 async function syncTokens(userId) {
 
@@ -379,6 +369,5 @@ setInterval(updatePresence, 15000);
 </audio>
 
 <script src="notifications.js"></script>
-
 </body>
 </html>

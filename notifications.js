@@ -1,7 +1,11 @@
+const sb = supabase.createClient(
+    "https://wfbepkegbtxszhhozqtz.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
+);
 
-const notificationUser = JSON.parse(localStorage.getItem("agrihub_user") || "null");
+const user = JSON.parse(localStorage.getItem("agrihub_user") || "null");
 
-if (notificationUser) {
+if (user) {
 
     // Unlock audio after first click
     document.addEventListener("click", function unlock() {
@@ -22,7 +26,7 @@ if (notificationUser) {
     });
 
     // Listen for ALL new messages
-    sb.channel("global-messages-" + notificationUser.id)
+    sb.channel("global-messages-" + user.id)
       .on(
         "postgres_changes",
         {
@@ -33,10 +37,7 @@ if (notificationUser) {
         payload => {
 
             // Ignore your own messages
-            // Ignore your own messages
-if (payload.new.sender_id === notificationUser.id) {
-    return;
-}
+            if (payload.new.sender_id === user.id) return;
 
             // Play sound
             const sound = document.getElementById("notificationSound");

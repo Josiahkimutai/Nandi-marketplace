@@ -9,39 +9,32 @@ const tokenSb = supabase.createClient(
     "https://wfbepkegbtxszhhozqtz.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmYmVwa2VnYnR4c3poaG96cXR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjE4NjEsImV4cCI6MjA5NzY5Nzg2MX0.RkyZ4Jszz9KbNP9fk4MldMX2S1416eYFR8GHhPzRGJc"
 );
-
-// Pages where the token engine should run
-const allowedPages = [
-    "farmerdashboard.html",
-    "myaccount.html",
-    "sell.html"
-];
+const allowedPages = ["myaccount.html","sell.html"];
 
 const currentPage = window.location.pathname.split("/").pop();
 
 if (!allowedPages.includes(currentPage)) {
     console.log("Token engine disabled on this page:", currentPage);
+    throw new Error("Token engine not allowed here");
+}
+// Logged in user
+// Logged in user (SAFE PARSE)
+const tokenUserRaw = localStorage.getItem("agrihub_user");
+
+let tokenUser = null;
+
+try {
+    tokenUser = tokenUserRaw ? JSON.parse(tokenUserRaw) : null;
+} catch (e) {
+    tokenUser = null;
+}
+
+// Stop if nobody is logged in
+if (!tokenUser || !tokenUser.id) {
+
+    console.log("TokenEngine: No logged in user.");
+
 } else {
-
-    // Logged in user (SAFE PARSE)
-    const tokenUserRaw = localStorage.getItem("agrihub_user");
-
-    let tokenUser = null;
-
-    try {
-        tokenUser = tokenUserRaw ? JSON.parse(tokenUserRaw) : null;
-    } catch (e) {
-        tokenUser = null;
-    }
-
-    // ...
-
-    // Stop if nobody is logged in
-    if (!tokenUser || !tokenUser.id) {
-
-        console.log("TokenEngine: No logged in user.");
-
-    } else {
 
     // ============================
     // CONFIG
@@ -254,5 +247,4 @@ cursor:pointer;
         `
     );
 
-}
 }
