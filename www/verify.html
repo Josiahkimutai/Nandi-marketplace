@@ -105,11 +105,53 @@
     }
 
     .upload-box{
-      border:1px solid #e5e7eb;
-      border-radius:16px;
-      padding:14px;
-      background:#fafbfc;
-    }
+    margin-top:15px;
+}
+
+.upload-card{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border:2px dashed #1f8f4e;
+    border-radius:18px;
+    padding:30px 20px;
+    background:#f8fff9;
+    cursor:pointer;
+    transition:.3s;
+    text-align:center;
+}
+
+.upload-card:hover{
+    background:#eefcf2;
+    transform:translateY(-2px);
+}
+
+.upload-card i{
+    font-size:60px;
+    color:#1f8f4e;
+    margin-bottom:15px;
+}
+
+.upload-card h3{
+    font-size:20px;
+    color:#1f2937;
+    margin-bottom:8px;
+}
+
+.upload-card p{
+    color:#6b7280;
+    font-size:14px;
+}
+
+#preview{
+    margin-top:20px;
+    width:100%;
+    max-height:250px;
+    object-fit:cover;
+    border-radius:15px;
+    border:1px solid #ddd;
+}
 
     .upload-label{
       display:flex;
@@ -204,6 +246,107 @@
         font-size:21px;
       }
     }
+    .loader-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(255,255,255,.96);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:9999;
+}
+
+.spinner{
+    width:80px;
+    height:80px;
+    border:7px solid #d1d5db;
+    border-top:7px solid #1f8f4e;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin-bottom:25px;
+}
+
+.loader-overlay h2{
+    font-size:24px;
+    margin-bottom:10px;
+    color:#1f2937;
+}
+
+.loader-overlay p{
+    color:#6b7280;
+    text-align:center;
+    max-width:300px;
+    line-height:1.5;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+.error-box{
+    display:none;
+    margin-top:18px;
+    padding:16px;
+    border-radius:14px;
+    background:#fef2f2;
+    border:1px solid #ef4444;
+    color:#b91c1c;
+    font-size:14px;
+    font-weight:600;
+    text-align:center;
+    line-height:1.5;
+}
+.success-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(255,255,255,.96);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:10000;
+}
+
+.success-circle{
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    background:#22c55e;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:50px;
+    margin-bottom:25px;
+    animation:pop .5s ease;
+}
+
+.success-overlay h2{
+    color:#166534;
+    margin-bottom:10px;
+}
+
+.success-overlay p{
+    color:#6b7280;
+}
+
+@keyframes pop{
+
+0%{
+    transform:scale(.2);
+}
+
+70%{
+    transform:scale(1.2);
+}
+
+100%{
+    transform:scale(1);
+}
+
+}
   </style>
 </head>
 <body>
@@ -221,12 +364,29 @@
 
     <div class="upload-grid">
       <div class="upload-box">
-        <div class="upload-label">
-          <i class="fa-solid fa-id-card"></i>
-          <span>ID Front</span>
-        </div>
-        <input type="file" id="front" accept="image/*">
-      </div>
+
+    <label for="front" class="upload-card">
+
+        <i class="fa-solid fa-id-card"></i>
+
+        <h3>National ID (Front)</h3>
+
+        <p>
+            Take a clear photo or choose one from your gallery.
+        </p>
+
+        <img id="preview" style="display:none;">
+
+    </label>
+
+    <input
+        type="file"
+        id="front"
+        accept="image/*"
+        capture="environment"
+        hidden>
+
+</div>
 
       <div class="upload-box">
         <div class="upload-label">
@@ -234,14 +394,6 @@
           <span>ID Back</span>
         </div>
         <input type="file" id="back" accept="image/*">
-      </div>
-
-      <div class="upload-box">
-        <div class="upload-label">
-          <i class="fa-solid fa-camera"></i>
-          <span>Selfie</span>
-        </div>
-        <input type="file" id="selfie" accept="image/*">
       </div>
     </div>
 
@@ -254,11 +406,30 @@
     </button>
 
     <div class="progress" id="progressText"></div>
-
+<div id="errorBox" class="error-box" style="display:none;"></div>
     <div class="note">
       Clear photos only.
     </div>
   </div>
+  <div id="loaderOverlay" class="loader-overlay">
+
+    <div class="spinner"></div>
+
+    <h2>Checking your ID...</h2>
+
+    <p>Please wait while AgriHub AI verifies your identity.</p>
+
+</div><div id="successOverlay" class="success-overlay">
+
+    <div class="success-circle">
+        <i class="fa-solid fa-check"></i>
+    </div>
+
+    <h2>Verification Successful</h2>
+
+    <p>Your identity has been verified successfully.</p>
+
+</div>
 <script src="auth.js"></script>
 <script>
   protectPage();
@@ -355,8 +526,11 @@
       return data.publicUrl;
     }
 
-    async function submitVerification() {
+ async function submitVerification() {
       try {
+
+        document.getElementById("errorBox").style.display = "none";
+
         const front = document.getElementById("front").files[0];
         const back = document.getElementById("back").files[0];
         const selfie = document.getElementById("selfie").files[0];
@@ -367,6 +541,7 @@
 }
 
         submitBtn.disabled = true;
+        document.getElementById("loaderOverlay").style.display = "flex";
         progressText.innerText = "Uploading images...";
 
 const frontUrl = await uploadFile(front, "front");
@@ -451,23 +626,42 @@ if(selfie){
           console.warn("users.verification_status update skipped:", userUpdateError.message);
         }
 
-      setStatus("verified", "Your identity has been verified successfully.");
+      disableForm(true);
 
-        disableForm(true);
-        progressText.innerText = "";
+progressText.innerText = "";
 
-        setTimeout(() => {
-          window.location.href = "farmerdashboard.html";
-        }, 1500);
+document.getElementById("successOverlay").style.display = "flex";
+
+setTimeout(() => {
+    window.location.href = "farmerdashboard.html";
+}, 2000);
 
       } catch (err) {
         console.error("Submit verification error:", err);
+        document.getElementById("loaderOverlay").style.display = "none";
         progressText.innerText = "";
         submitBtn.disabled = false;
-        alert(err.message || "Verification failed");
+        const errorBox = document.getElementById("errorBox");
+
+errorBox.innerHTML = `
+<strong>Verification Failed</strong><br><br>
+${err.message || "Your ID does not match your account details, or the photo is unclear or incomplete."}
+`;
+
+errorBox.style.display = "block";
       }
     }
+document.getElementById("front").addEventListener("change", function () {
 
+    const file = this.files[0];
+    if (!file) return;
+
+    const preview = document.getElementById("preview");
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+
+});
     loadVerificationStatus();
  window.addEventListener("beforeunload", () => {
   const user = JSON.parse(localStorage.getItem("agrihub_user"));
