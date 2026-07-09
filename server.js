@@ -660,9 +660,8 @@ console.log("NAME MATCH:", nameMatch);
 console.log("ID MATCH:", idMatch);
 const confidenceOK = result.confidence >= 25;
 if (
- nameMatch &&
- idMatch &&
- result.confidence >= 85
+    idMatch &&
+    confidenceOK
 ) {
 
     await supabase
@@ -677,7 +676,7 @@ fs.unlinkSync(req.file.path);
 
 res.json({
     success: true,
-    verified: nameMatch && idMatch && confidenceOK,
+    verified: idMatch && confidenceOK,
     nameMatch,
     idMatch,
     confidence: result.confidence
