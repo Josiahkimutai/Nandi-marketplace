@@ -659,10 +659,13 @@ console.log("DATABASE ID:", dbId);
 console.log("NAME MATCH:", nameMatch);
 console.log("ID MATCH:", idMatch);
 const confidenceOK = result.confidence >= 25;
-if (
-    idMatch &&
-    confidenceOK
-) {
+
+const verifiedByName = nameMatch && confidenceOK;
+const verifiedById = idMatch && confidenceOK;
+
+const verified = verifiedByName || verifiedById;
+
+if (verified) {
 
     await supabase
         .from("users")
@@ -672,16 +675,18 @@ if (
         .eq("id", userId);
 
 }
+
 fs.unlinkSync(req.file.path);
 
 res.json({
     success: true,
-    verified: idMatch && confidenceOK,
+    verified,
+    verifiedByName,
+    verifiedById,
     nameMatch,
     idMatch,
     confidence: result.confidence
 });
-   
 
 
     } catch (err) {
